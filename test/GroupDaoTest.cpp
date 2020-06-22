@@ -21,7 +21,7 @@
 #include <iostream>
 using namespace std;
 
-#include "../pojo/Group.h"
+#include "../dao/GroupDao.h"
 
 /* 
  * ===  FUNCTION  ======================================================================
@@ -31,9 +31,8 @@ using namespace std;
  */
 int main ( int argc, char *argv[] )
 {
-	Group *group = new Group();
-
-	group->setName("群1");
+	GroupDao gd;
+	Group *group = gd.findOne(1);
 
 	cout << group->toString() << endl;
 
