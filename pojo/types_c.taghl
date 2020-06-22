@@ -1,7 +1,0 @@
-syn keyword CTagsMember uid permission username id uid2 password gid name mobile uid1 status
-syn keyword CTagsEnumeratorName UserStatus UserGroupMapStatus UserGroupMapPermission
-syn keyword CTagsEnumerationValue USER_STAT_ONLINE USER_STAT_HIDE USER_STAT_OFFLINE PERM_ADMI GROUP_USER_STAT_NORMAL GROUP_USER_STAT_BANPOST PERM_USER
-syn keyword CTagsFunction setPassword getUid toString getUid1 setGid setUsername getId setUid UserGroupMap User setId getName setUid2 getPermission Group getStatus getPassword getGid getUid2 getMobile Friend setMobile getUsername setName setUid1 setStatus setPermission
-syn keyword CTagsDefinedName USER_H GROUP_H FRIEND_H USERGROUPMAP_H GROUPNAME_MAX_LEN
-syn keyword CTagsClass User UserGroupMap Group Friend
-
