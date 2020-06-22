@@ -21,7 +21,7 @@
 #include <iostream>
 using namespace std;
 
-#include "../dao/GroupDao.h"
+#include "../service/GroupService.h"
 
 /* 
  * ===  FUNCTION  ======================================================================
@@ -31,8 +31,8 @@ using namespace std;
  */
 int main ( int argc, char *argv[] )
 {
-	GroupDao gd;
-	Group *group = gd.findOne(1);
+	GroupService gs;
+	Group *group = gs.findGroupById(1);
 
 	cout << group->toString() << endl;
 
