@@ -3,7 +3,7 @@ user_obj=UserTest.o User.o
 group_obj=GroupTest.o Group.o
 friend_obj=FriendTest.o Friend.o
 usergroupmap_obj=UsergroupmapTest.o Usergroupmap.o
-ConnectionPool_obj=ConnectionPoolTest.o ConnectionPool.o ConfigFileReader.o User.o
+ConnectionPool_obj=ConnectionPoolTest.o ConnectionPool.o ConfigFileReader.o User.o Specification.o
 target=UserTest GroupTest FriendTest UsergroupmapTest ConnectionPoolTest
 CFLAGS=-Wall -std=c++11 -lpthread -L/usr/lib64/mysql/ -lmysqlclient
 CC=g++
@@ -55,10 +55,14 @@ ConnectionPoolTest.o:ConnectionPoolTest.cpp ../include/ConnectionPool.cpp \
 	$(CC) -c $< -o $@ $(CFLAGS)
 
 ConnectionPool.o:../include/ConnectionPool.cpp ../include/ConnectionPool.h \
-	../include/ConfigFileReader.cpp ../include/ConfigFileReader.h
+	../include/ConfigFileReader.cpp ../include/ConfigFileReader.h \
+	../include/Specification.cpp ../include/Specification.h
 	$(CC) -c $< -o $@ $(CFLAGS)
 
 ConfigFileReader.o:../include/ConfigFileReader.cpp ../include/ConfigFileReader.h
+	$(CC) -c $< -o $@ $(CFLAGS)
+
+Specification.o:../include/Specification.cpp ../include/Specification.h
 	$(CC) -c $< -o $@ $(CFLAGS)
 
 .PHONY:clean

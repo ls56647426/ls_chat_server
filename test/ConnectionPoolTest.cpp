@@ -23,6 +23,7 @@ using namespace std;
 
 #include "../include/ConnectionPool.h"
 #include "../pojo/User.h"
+#include "../include/Specification.h"
 
 /* 
  * ===  FUNCTION  ======================================================================
@@ -33,7 +34,15 @@ using namespace std;
 int main ( int argc, char *argv[] )
 {
 	User *user = new User();
-	MYSQL_RES *result = ConnectionPool::runOne("select * from user;");
+	Specification spec;
+	spec.setSqlWhere(
+			Specification::equal(
+				"username",
+				Specification::tranString("12345678910")
+				)
+			);
+	MYSQL_RES *result = ConnectionPool::runOne("select * from user where " +
+			spec.getSqlWhere());
 
 	int field_num = mysql_num_fields(result);
 	MYSQL_FIELD *fields = mysql_fetch_fields(result);
