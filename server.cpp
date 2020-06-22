@@ -19,6 +19,9 @@
 /* c std lib */
 #include <stdlib.h>
 
+/* c++ lib */
+#include <iostream>
+
 /* third-party lib */
 #include <event2/listener.h>
 #include <event2/bufferevent.h>
@@ -26,6 +29,7 @@
 #include <event2/event.h>
 
 #include "server.h"
+#include "include/Msg.h"
 
 /* 
  * ===  FUNCTION  ======================================================================
@@ -35,6 +39,9 @@
  */
 int main ( int argc, char *argv[] )
 {
+	Msg msg;
+
+	cout << msg.toString() << endl;
 
 	return EXIT_SUCCESS;
 }
