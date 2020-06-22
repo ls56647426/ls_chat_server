@@ -1,10 +1,11 @@
 obj=$(wildcard *.o)
-UserDao_obj=UserDaoTest.o User.o UserDao.o ConnectionPool.o ConfigFileReader.o Specification.o
-GroupDao_obj=GroupDaoTest.o Group.o GroupDao.o ConnectionPool.o ConfigFileReader.o Specification.o
-FriendDao_obj=FriendDaoTest.o Friend.o FriendDao.o ConnectionPool.o ConfigFileReader.o Specification.o
-usergroupmap_obj=UsergroupmapTest.o Usergroupmap.o
-ConnectionPool_obj=ConnectionPoolTest.o ConnectionPool.o ConfigFileReader.o User.o Specification.o
-target=UserDaoTest GroupDaoTest FriendDaoTest UsergroupmapTest ConnectionPoolTest
+ConnectionPool_lib=ConnectionPool.o ConfigFileReader.o Specification.o
+UserDao_obj=UserDaoTest.o User.o UserDao.o $(ConnectionPool_lib)
+GroupDao_obj=GroupDaoTest.o Group.o GroupDao.o $(ConnectionPool_lib)
+FriendDao_obj=FriendDaoTest.o Friend.o FriendDao.o $(ConnectionPool_lib)
+UserGroupMapDao_obj=UserGroupMapDaoTest.o UserGroupMap.o UserGroupMapDao.o $(ConnectionPool_lib)
+ConnectionPool_obj=ConnectionPoolTest.o $(ConnectionPool_lib)
+target=UserDaoTest GroupDaoTest FriendDaoTest UserGroupMapDaoTest ConnectionPoolTest
 CFLAGS=-Wall -std=c++11 -lpthread -L/usr/lib64/mysql/ -lmysqlclient
 CC=g++
 
@@ -19,7 +20,7 @@ GroupDaoTest:$(GroupDao_obj)
 FriendDaoTest:$(FriendDao_obj)
 	$(CC) $^ -o $@ $(CFLAGS)
 
-UsergroupmapTest:$(usergroupmap_obj)
+UserGroupMapDaoTest:$(UserGroupMapDao_obj)
 	$(CC) $^ -o $@ $(CFLAGS)
 
 ConnectionPoolTest:$(ConnectionPool_obj)
@@ -58,10 +59,15 @@ FriendDao.o:../dao/FriendDao.cpp ../dao/FriendDao.h \
 	../pojo/Friend.cpp ../pojo/Friend.h
 	$(CC) -c $< -o $@ $(CFLAGS)
 
-UsergroupmapTest.o:UsergroupmapTest.cpp ../pojo/Usergroupmap.cpp ../pojo/Usergroupmap.h
+UserGroupMapDaoTest.o:UserGroupMapDaoTest.cpp ../pojo/UserGroupMap.cpp ../pojo/UserGroupMap.h \
+	../dao/UserGroupMapDao.cpp ../dao/UserGroupMapDao.h
 	$(CC) -c $< -o $@ $(CFLAGS)
 
-Usergroupmap.o:../pojo/Usergroupmap.cpp ../pojo/Usergroupmap.h
+UserGroupMap.o:../pojo/UserGroupMap.cpp ../pojo/UserGroupMap.h
+	$(CC) -c $< -o $@ $(CFLAGS)
+
+UserGroupMapDao.o:../dao/UserGroupMapDao.cpp ../dao/UserGroupMapDao.h \
+	../pojo/UserGroupMap.cpp ../pojo/UserGroupMap.h
 	$(CC) -c $< -o $@ $(CFLAGS)
 
 ConnectionPoolTest.o:ConnectionPoolTest.cpp ../include/ConnectionPool.cpp \

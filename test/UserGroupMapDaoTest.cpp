@@ -21,7 +21,7 @@
 #include <iostream>
 using namespace std;
 
-#include "../pojo/Usergroupmap.h"
+#include "../dao/UserGroupMapDao.h"
 
 /* 
  * ===  FUNCTION  ======================================================================
@@ -31,10 +31,8 @@ using namespace std;
  */
 int main ( int argc, char *argv[] )
 {
-	UserGroupMap *ugm = new UserGroupMap();
-
-	ugm->setUid(1);
-	ugm->setGid(2);
+	UserGroupMapDao ugmd;
+	UserGroupMap *ugm = ugmd.findOne(1);
 
 	cout << ugm->toString() << endl;
 
