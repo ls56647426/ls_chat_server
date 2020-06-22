@@ -23,7 +23,7 @@
 #include <algorithm>
 using namespace std;
 
-#include "../dao/UserDao.h"
+#include "../service/UserService.h"
 
 /* 
  * ===  FUNCTION  ======================================================================
@@ -33,8 +33,8 @@ using namespace std;
  */
 int main ( int argc, char *argv[] )
 {
-	UserDao ud;
-	User *user = ud.findOne(1);
+	UserService us;
+	User *user = us.findUserById(1);
 
 	cout << user->toString() << endl;
 
