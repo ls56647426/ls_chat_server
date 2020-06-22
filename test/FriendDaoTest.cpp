@@ -21,7 +21,7 @@
 #include <iostream>
 using namespace std;
 
-#include "../pojo/Friend.h"
+#include "../dao/FriendDao.h"
 
 /* 
  * ===  FUNCTION  ======================================================================
@@ -31,10 +31,8 @@ using namespace std;
  */
 int main ( int argc, char *argv[] )
 {
-	Friend *_friend = new Friend();
-
-	_friend->setUid1(1);
-	_friend->setUid2(2);
+	FriendDao fd;
+	Friend *_friend = fd.findOne(1);
 
 	cout << _friend->toString() << endl;
 

@@ -1,10 +1,10 @@
 obj=$(wildcard *.o)
 UserDao_obj=UserDaoTest.o User.o UserDao.o ConnectionPool.o ConfigFileReader.o Specification.o
 GroupDao_obj=GroupDaoTest.o Group.o GroupDao.o ConnectionPool.o ConfigFileReader.o Specification.o
-friend_obj=FriendTest.o Friend.o
+FriendDao_obj=FriendDaoTest.o Friend.o FriendDao.o ConnectionPool.o ConfigFileReader.o Specification.o
 usergroupmap_obj=UsergroupmapTest.o Usergroupmap.o
 ConnectionPool_obj=ConnectionPoolTest.o ConnectionPool.o ConfigFileReader.o User.o Specification.o
-target=UserDaoTest GroupDaoTest FriendTest UsergroupmapTest ConnectionPoolTest
+target=UserDaoTest GroupDaoTest FriendDaoTest UsergroupmapTest ConnectionPoolTest
 CFLAGS=-Wall -std=c++11 -lpthread -L/usr/lib64/mysql/ -lmysqlclient
 CC=g++
 
@@ -16,7 +16,7 @@ UserDaoTest:$(UserDao_obj)
 GroupDaoTest:$(GroupDao_obj)
 	$(CC) $^ -o $@ $(CFLAGS)
 
-FriendTest:$(friend_obj)
+FriendDaoTest:$(FriendDao_obj)
 	$(CC) $^ -o $@ $(CFLAGS)
 
 UsergroupmapTest:$(usergroupmap_obj)
@@ -47,10 +47,15 @@ GroupDao.o:../dao/GroupDao.cpp ../dao/GroupDao.h \
 	../pojo/Group.cpp ../pojo/Group.h
 	$(CC) -c $< -o $@ $(CFLAGS)
 
-FriendTest.o:FriendTest.cpp ../pojo/Friend.cpp ../pojo/Friend.h
+FriendDaoTest.o:FriendDaoTest.cpp ../pojo/Friend.cpp ../pojo/Friend.h \
+	../dao/FriendDao.cpp ../dao/FriendDao.h
 	$(CC) -c $< -o $@ $(CFLAGS)
 
 Friend.o:../pojo/Friend.cpp ../pojo/Friend.h
+	$(CC) -c $< -o $@ $(CFLAGS)
+
+FriendDao.o:../dao/FriendDao.cpp ../dao/FriendDao.h \
+	../pojo/Friend.cpp ../pojo/Friend.h
 	$(CC) -c $< -o $@ $(CFLAGS)
 
 UsergroupmapTest.o:UsergroupmapTest.cpp ../pojo/Usergroupmap.cpp ../pojo/Usergroupmap.h
