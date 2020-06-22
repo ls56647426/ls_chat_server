@@ -79,7 +79,7 @@ list<Group> GroupDao::findAll(const Specification &spec)
 
 	/* 构建sql语句 */
 	string content = "select * from `group` " +
-				spec.getSqlWhere() == "" ? "" : "where " + spec.getSqlWhere();
+				(spec.getSqlWhere() == "" ? "" : "where " + spec.getSqlWhere());
 
 	/* 获得查询结果 */
 	MYSQL_RES* rec = ConnectionPool::runOne(content);
@@ -90,7 +90,7 @@ list<Group> GroupDao::findAll(const Specification &spec)
 
 	/* 将查询的结果存入list<Group>链表中 */
 	MYSQL_ROW row = NULL;
-	while(mysql_fetch_row(rec))
+	while((row = mysql_fetch_row(rec)))
 	{
 		Group group;
 		group.setId(atoi(row[0]));

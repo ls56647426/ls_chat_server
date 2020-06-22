@@ -1,9 +1,11 @@
 #ifndef USER_H
 #define USER_H
 
+/* c lib */
 #include <stdio.h>
 #include <stdint.h>
 
+/* c++ lib */
 #include <string>
 using namespace std;
 

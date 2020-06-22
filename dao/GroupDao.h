@@ -1,6 +1,9 @@
 #ifndef GROUPDAO_H
 #define GROUPDAO_H
 
+/* c++ lib */
+#include <list>
+
 #include "../pojo/Group.h"
 #include "../include/Specification.h"
 #include "../include/ConnectionPool.h"

@@ -1,13 +1,8 @@
 #ifndef USERDAO_H
 #define USERDAO_H
 
-/* c lib */
-#include <stdint.h>
-
 /* c++ lib */
 #include <list>
-#include <string>
-using namespace std;
 
 #include "../pojo/User.h"
 #include "../include/Specification.h"

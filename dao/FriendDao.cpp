@@ -81,14 +81,14 @@ list<Friend> FriendDao::findAll(const Specification &spec)
 
 	/* 构建sql语句 */
 	string content = "select * from friend " +
-				spec.getSqlWhere() == "" ? "" : "where " + spec.getSqlWhere();
+				(spec.getSqlWhere() == "" ? "" : "where " + spec.getSqlWhere());
 
 	/* 获得查询结果 */
 	MYSQL_RES* rec = ConnectionPool::runOne(content);
 
 	/* 将查询的结果存入list<Friend>链表中 */
 	MYSQL_ROW row = NULL;
-	while(mysql_fetch_row(rec))
+	while((row = mysql_fetch_row(rec)))
 	{
 		Friend _friend;
 		_friend.setId(atoi(row[0]));

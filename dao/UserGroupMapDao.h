@@ -3,7 +3,6 @@
 
 /* c++ lib */
 #include <list>
-#include <string>
 
 #include "../pojo/UserGroupMap.h"
 #include "../include/Specification.h"

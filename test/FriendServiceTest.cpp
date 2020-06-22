@@ -21,7 +21,8 @@
 #include <iostream>
 using namespace std;
 
-#include "../dao/FriendDao.h"
+#include "../service/UserService.h"
+#include "../service/FriendService.h"
 
 /* 
  * ===  FUNCTION  ======================================================================
@@ -31,10 +32,13 @@ using namespace std;
  */
 int main ( int argc, char *argv[] )
 {
-	FriendDao fd;
-	Friend *_friend = fd.findOne(1);
+	UserService us;
+	FriendService fs;
+	User *user = us.findUserById(1);
+	list<Friend> list = fs.findAllByUser(*user);
 
-	cout << _friend->toString() << endl;
+	for(auto _friend : list)
+		cout << _friend.toString() << endl;
 
 	return EXIT_SUCCESS;
 }

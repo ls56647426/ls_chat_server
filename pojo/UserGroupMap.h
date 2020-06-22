@@ -1,8 +1,13 @@
 #ifndef USERGROUPMAP_H
 #define USERGROUPMAP_H
 
+/* c lib */
 #include <stdio.h>
 #include <stdint.h>
+
+/* c++ lib */
+#include <string>
+using namespace std;
 
 #include "User.h"
 #include "Group.h"

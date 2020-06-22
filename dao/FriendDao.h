@@ -1,6 +1,9 @@
 #ifndef FRIENDDAO_H
 #define FRIENDDAO_H
 
+/* c++ lib */
+#include <list>
+
 #include "../pojo/Friend.h"
 #include "../include/Specification.h"
 #include "../include/ConnectionPool.h"

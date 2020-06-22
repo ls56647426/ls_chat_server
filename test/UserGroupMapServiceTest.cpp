@@ -21,7 +21,8 @@
 #include <iostream>
 using namespace std;
 
-#include "../dao/UserGroupMapDao.h"
+#include "../service/UserService.h"
+#include "../service/UserGroupMapService.h"
 
 /* 
  * ===  FUNCTION  ======================================================================
@@ -31,10 +32,13 @@ using namespace std;
  */
 int main ( int argc, char *argv[] )
 {
-	UserGroupMapDao ugmd;
-	UserGroupMap *ugm = ugmd.findOne(1);
+	UserService us;
+	UserGroupMapService ugms;
+	User *user = us.findUserById(1);
+	list<UserGroupMap> list = ugms.findAllByUser(*user);
 
-	cout << ugm->toString() << endl;
+	for(auto ugm : list)
+		cout << ugm.toString() << endl;
 
 	return EXIT_SUCCESS;
 }

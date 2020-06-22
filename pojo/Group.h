@@ -1,9 +1,11 @@
 #ifndef GROUP_H
 #define GROUP_H
 
+/* c lib */
 #include <stdio.h>
 #include <stdint.h>
 
+/* c++ lib */
 #include <string>
 using namespace std;
 
