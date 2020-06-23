@@ -1,6 +1,8 @@
 CC=g++
 LIBS=-L/usr/lib64/mysql/ -lmysqlclient
-CFLAGS=-Wall -std=c++11 $(LIBS)
+LIBS+=-L/usr/local/lib/ -levent
+LIBS+=-lpthread
+CFLAGS=-Wall -std=c++11
 
 ConnectionPool_obj=ConnectionPool.o ConfigFileReader.o Specification.o
 UserService_obj=UserService.o UserDao.o User.o
@@ -12,7 +14,7 @@ object=server.o $(ConnectionPool_obj) $(UserService_obj) $(GroupService_obj) \
 target=server
 
 $(target):$(object)
-	$(CC) $^ -o $@ $(CFLAGS)
+	$(CC) $^ -o $@ $(CFLAGS) $(LIBS)
 
 server.o:../server.cpp ../server.h
 	$(CC) -c $< -o $@ $(CFLAGS)
