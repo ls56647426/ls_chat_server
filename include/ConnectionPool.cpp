@@ -190,10 +190,10 @@ ConnectionPool &ConnectionPool::getInstance()
 	 * return g_instance;
 	 * 具体是否有什么区别，暂时不知道
 	 */
-	if (NULL == instance)
+	if (!instance)
 	{
 		unique_lock<mutex> lock(mymutex);
-		if (NULL == instance)
+		if (!instance)
 			instance = new ConnectionPool();
 	}
 
