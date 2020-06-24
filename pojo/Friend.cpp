@@ -2,7 +2,9 @@
 
 Friend::Friend()
 {
-
+	id = 0;
+	uid1 = 0;
+	uid2 = 0;
 }
 
 uint32_t Friend::getId() const

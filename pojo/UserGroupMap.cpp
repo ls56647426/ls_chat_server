@@ -2,7 +2,7 @@
 
 UserGroupMap::UserGroupMap()
 {
-
+	id = uid = gid = status = permission = 0;
 }
 
 uint32_t UserGroupMap::getId() const

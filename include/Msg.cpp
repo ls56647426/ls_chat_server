@@ -2,7 +2,7 @@
 
 Msg::Msg()
 {
-
+	type = 0;
 }
 
 uint32_t Msg::getType() const
@@ -66,7 +66,7 @@ string Msg::toString() const
 
 MsgInfo::MsgInfo()
 {
-
+	info.clear();
 }
 
 string MsgInfo::getInfo() const

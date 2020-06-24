@@ -2,7 +2,11 @@
 
 User::User()
 {
-
+	id = 0;
+	username.clear();
+	password.clear();
+	mobile.clear();
+	status = 0;
 }
 
 uint32_t User::getId() const

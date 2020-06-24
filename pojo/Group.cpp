@@ -2,7 +2,8 @@
 
 Group::Group()
 {
-
+	id = 0;
+	name.clear();
 }
 
 uint32_t Group::getId() const
