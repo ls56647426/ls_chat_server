@@ -57,8 +57,8 @@ void Msg::setInfo(const MsgInfo &value)
 
 string Msg::toString() const
 {
-	return "'type':" + to_string(type) +
-		", 'group':{" + group.toString() +
+	return "'type':'" + to_string(type) +
+		"', 'group':{" + group.toString() +
 		"}, 'src':{" + src.toString() +
 		"}, 'dest':{" + dest.toString() +
 		"}, 'info':{" + info.toString() + "}";
