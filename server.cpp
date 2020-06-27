@@ -35,10 +35,8 @@
 #include <iostream>
 
 /* third-party lib */
-#include <event2/listener.h>
-#include <event2/bufferevent.h>
-#include <event2/buffer.h>
-#include <event2/event.h>
+#include <zlib.h>
+#include <json/json.h>
 
 /* custom lib */
 #include "server.h"
@@ -50,7 +48,7 @@
 /* 
  * ===  FUNCTION  ======================================================================
  *         Name:  main
- *  Description:  
+ *  Description:  服务器端主函数
  * =====================================================================================
  */
 int main ( int argc, char *argv[] )
@@ -93,22 +91,81 @@ int main ( int argc, char *argv[] )
 /* 
  * ===  FUNCTION  ======================================================================
  *         Name:  read_cb
- *  Description:  
+ *  Description:  读缓冲区回调函数
  * =====================================================================================
  */
 void read_cb(struct bufferevent *bev, void *arg)
 {
-	char buf[BUFSIZ];
+	Msg msg;
+	Group grp;
+	User src, dest;
+	MsgInfo info;
+	string msgStr;
+	string destStr;
+	struct evbuffer *input = bufferevent_get_input(bev);
+	struct evbuffer *output = bufferevent_get_output(bev);
 
-	bufferevent_read(bev, buf, BUFSIZ);
+	/* 解析数据包 */
+	msgStr = unpacket(input);
+	if(!msgStr == "")
+	{
+		printf("解析数据包出错。\n");
+		return;
+	}
 
-	cout << "clinet:" << buf << endl;
+	/* 提取json数据 */
+	Json::CharReaderBuilder b;
+    Json::CharReader* reader(b.newCharReader());
+    Json::Value root;
+    JSONCPP_STRING errs;
+    bool ok = reader->parse(msgStr.data(), msgStr.data() + msgStr.size(), &root, &errs);
+    if (!ok || errs.size() != 0)
+    {
+        printf("invalid json: %s\n", msgStr.data());
+        delete reader;
+        return;
+    }
+    delete reader;
+
+	msg.setType(root["type"].asInt());
+	
+	grp.setId(root["group"]["id"].asInt());
+	grp.setName(root["group"]["name"].asString());
+	msg.setGroup(grp);
+	
+	src.setId(root["src"]["id"].asInt());
+	src.setUsername(root["src"]["username"].asString());
+	src.setPassword(root["src"]["password"].asString());
+	src.setMobile(root["src"]["mobile"].asString());
+	src.setStatus(root["src"]["status"].asInt64());
+	msg.setSrc(src);
+
+	dest.setId(root["dest"]["id"].asInt());
+	dest.setUsername(root["dest"]["username"].asString());
+	dest.setPassword(root["dest"]["password"].asString());
+	dest.setMobile(root["dest"]["mobile"].asString());
+	dest.setStatus(root["dest"]["status"].asInt());
+	msg.setDest(dest);
+
+	info.setInfo(root["info"]["info"].asString());
+	msg.setInfo(info);
+
+	/* 解析并处理 */
+	switch(msg.getType())
+	{
+		case MsgType::MSG_HEARTBEAT: 		/* 心跳包 */
+			/* 封包 + 发送 */
+			destStr = packet(msg.toString());
+			evbuffer_add(output, destStr.data(), destStr.size());
+			break;
+		default: break;
+	}
 }
 
 /* 
  * ===  FUNCTION  ======================================================================
  *         Name:  write_cb
- *  Description:  
+ *  Description:  写缓冲区回调函数
  * =====================================================================================
  */
 void write_cb(struct bufferevent *bev, void *arg)
@@ -119,7 +176,7 @@ void write_cb(struct bufferevent *bev, void *arg)
 /* 
  * ===  FUNCTION  ======================================================================
  *         Name:  event_cb
- *  Description:  
+ *  Description:  服务器端事件处理回调函数
  * =====================================================================================
  */
 void event_cb(struct bufferevent *bev,short events, void *arg)
@@ -141,7 +198,7 @@ void event_cb(struct bufferevent *bev,short events, void *arg)
 /* 
  * ===  FUNCTION  ======================================================================
  *         Name:  listener_cb
- *  Description:  
+ *  Description:  服务器端监听事件回调函数
  * =====================================================================================
  */
 void listener_cb(struct evconnlistener* listener, evutil_socket_t fd,
@@ -168,7 +225,7 @@ void listener_cb(struct evconnlistener* listener, evutil_socket_t fd,
 /* 
  * ===  FUNCTION  ======================================================================
  *         Name:  signal_cb
- *  Description:  
+ *  Description:  Ctrl+C信号回调函数
  * =====================================================================================
  */
 void signal_cb(evutil_socket_t sig, short events, void *arg)
@@ -181,5 +238,131 @@ void signal_cb(evutil_socket_t sig, short events, void *arg)
 	printf("\n接受到关闭信号，程序将在2秒后退出。。。\n");
 
 	event_base_loopexit(base, &delay);
+}
+
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  packet
+ *  Description:  封装数据包
+ * 					将json数据 压缩/不压缩(默认压缩) 后，插入包头，返回结果
+ * =====================================================================================
+ */
+string packet(const string &msgStr)
+{
+	char *res;
+	char buf[BUFSIZ];
+	uint32_t resLen;
+	MsgHeader header;
+	header.compressflag = MsgHeaderType::COMPRESSED;
+	header.originsize = msgStr.size();
+	header.compresssize = compressBound(header.originsize);
+	
+	/* 压缩，插入消息头 */
+	if(header.compressflag == MsgHeaderType::COMPRESSED)
+	{
+		/* 压缩数据 */
+		compress((Bytef*)buf, (uLongf*)&header.compresssize, (Bytef*)msgStr.data(), header.originsize);
+
+		/* 压缩校验 */
+		if(header.compresssize <= 0 ||
+				header.compresssize > MSGINFO_MAX_LEN)
+		{
+			printf("压缩结果错误。\n");
+			return "";
+		}
+
+		resLen = sizeof(header) + header.compresssize;
+		res = new char[resLen];
+		memcpy(res, &header, sizeof(header));
+		memcpy(res + sizeof(header), buf, header.compresssize);
+	}
+	else
+	{
+		resLen = sizeof(header) + header.originsize;
+		res = new char[resLen];
+		memcpy(res, &header, sizeof(header));
+		memcpy(res + sizeof(header), msgStr.data(), header.originsize);
+	}
+
+	return string(res, resLen);
+}
+
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  unpacket
+ *  Description:  解析数据包
+ *  				解析从客户端发来的数据包
+ *  				解压并去掉包头，剩Msg的json数据
+ * =====================================================================================
+ */
+string unpacket(evbuffer *input)
+{
+	char *res;
+	MsgHeader header;
+	uint32_t len = evbuffer_get_length(input);
+
+	/* 解析数据包 */
+	if(len < sizeof(header))
+	{
+		printf("收到数据，但长度不足，等待下次传输：%d\n", len);
+		return "";
+	}
+
+	/* 获取数据头 */
+	evbuffer_copyout(input, &header, sizeof(header));
+
+	/* 压缩过，需要解压数据包再提取 */
+	if(header.compressflag == MsgHeaderType::COMPRESSED)
+	{
+		/* 包头有错误，立即关闭连接 */
+		if(header.originsize <= 0 ||
+				header.originsize > MSGINFO_MAX_LEN ||
+				header.compresssize <= 0 ||
+				header.compresssize > MSGINFO_MAX_LEN)
+		{
+			printf("包头错误：%d, %d\n", header.originsize, header.compresssize);
+			return "";
+		}
+
+		/* 收到的数据不够一个完整的数据包 */
+		if(len < sizeof(header) + header.compresssize)
+			return "";
+
+		/* 获取数据 */
+		char *buf = new char[header.compresssize];
+		evbuffer_remove(input, &header, sizeof(header));
+		evbuffer_remove(input, buf, header.compresssize);
+
+		/* 解压数据 */
+		res = new char[header.originsize];
+		int ret;
+		if((ret = uncompress((Bytef*)res, (uLongf*)&header.originsize, (Bytef*)buf, header.compresssize)) != Z_OK)
+		{
+			printf("解压失败 %d：%d\n", ret, header.originsize);
+			return "";
+		}
+	}
+	/* 没压缩过，直接提取 */
+	else
+	{
+		/* 包头有错误，立即关闭连接 */
+		if(header.originsize <= 0 ||
+				header.originsize > MSGINFO_MAX_LEN)
+		{
+			printf("包头错误：%d\n", header.originsize);
+			return "";
+		}
+
+		/* 收到的数据不够一个完整的数据包 */
+		if((uint32_t)len < sizeof(header) + header.originsize)
+			return "";
+
+		/* 获取数据 */
+		res = new char[header.originsize];
+		evbuffer_remove(input, &header, sizeof(header));
+		evbuffer_remove(input, res, header.originsize);
+	}
+
+	return string(res, header.originsize);
 }
 

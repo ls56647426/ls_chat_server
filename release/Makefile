@@ -1,6 +1,8 @@
 CC=g++
 LIBS=-L/usr/lib64/mysql/ -lmysqlclient
 LIBS+=-L/usr/local/lib/ -levent
+LIBS+=-L/usr/lib64/ -ljsoncpp
+LIBS+=-L/usr/local/lib/ -lz
 LIBS+=-lpthread
 CFLAGS=-Wall -std=c++11
 
