@@ -108,6 +108,7 @@ void read_cb(struct bufferevent *bev, void *arg)
 	string destStr;
 	struct evbuffer *input = bufferevent_get_input(bev);
 	struct evbuffer *output = bufferevent_get_output(bev);
+	int tmp;
 
 	/* 解析数据包 */
 	msgStr = unpacket(input);
@@ -179,6 +180,20 @@ void read_cb(struct bufferevent *bev, void *arg)
 			}
 			
 			/* 登录成功 */
+			/* 登录 */
+			tmp = u_tmp->getId();
+			if(onlineMap[tmp] == 0)
+				onlineMap[tmp] = bev;
+			/* 挤掉 */
+			else
+			{
+				/* 通知被挤掉的人 */
+				msg.setType(ERRNO_BEOFFLINE);
+				destStr = packet(msg.toString());
+				bufferevent_write(onlineMap[tmp], destStr.data(), destStr.size());
+				onlineMap[tmp] = bev;
+				return;
+			}
 			/* 修改在线状态 */
 			u_tmp->setStatus(UserStatus::USER_STAT_ONLINE);
 			us.updateUser(*u_tmp);
@@ -227,27 +242,28 @@ void event_cb(struct bufferevent *bev,short events, void *arg)
 	}
 	else if(events & BEV_EVENT_CONNECTED)
 	{
-		/* 注册可读事件 */
-		bufferevent_enable(bev, EV_READ);
-		//设置读超时时间 10s
-		struct timeval tTimeout = {10, 0};
-		bufferevent_set_timeouts(bev, &tTimeout, NULL);
-	}
-	else if(events & (BEV_EVENT_TIMEOUT | BEV_EVENT_READING))
-	{ 	/* 如果读超时，发送心跳包 */
-		Msg msg;
-		msg.setType(MsgType::MSG_HEARTBEAT);
-		string destStr = packet(msg.toString());
-		bufferevent_write(bev, destStr.data(), destStr.size());
-
-		/* 重新注册可读事件 */
-		bufferevent_enable(bev, EV_READ);
+		printf("event_cb,新的连接成功。");
+		return;
 	}
 
 	bufferevent_free(bev);
 
 	/* 下线处理 */
+	auto find_item = find_if(onlineMap.begin(), onlineMap.end(),
+			[bev](const map<uint32_t, struct bufferevent *>::value_type item)
+			{
+			return item.second == bev;
+			});
+	if (find_item != onlineMap.end())
+	{
+		/* 数据库状态更新 */
+		User *user = us.findUserById(find_item->first);
+		user->setStatus(UserStatus::USER_STAT_OFFLINE);
+		us.updateUser(*user);
 
+		/* 删除在线列表 */
+		onlineMap.erase(find_item);
+	}
 
 	printf("bufferevent 资源已经被释放.\n");
 }
