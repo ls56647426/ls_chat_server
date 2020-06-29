@@ -41,9 +41,12 @@
 /* custom lib */
 #include "server.h"
 #include "include/Msg.h"
+#include "service/UserService.h"
 
 #define SERV_PORT 5664
 #define SERV_IP "112.124.19.14"
+
+UserService us;
 
 /* 
  * ===  FUNCTION  ======================================================================
@@ -96,9 +99,10 @@ int main ( int argc, char *argv[] )
  */
 void read_cb(struct bufferevent *bev, void *arg)
 {
+	printf("read_cb收到数据。\n");
 	Msg msg;
 	Group grp;
-	User src, dest;
+	User src, dest, *u_tmp;
 	MsgInfo info;
 	string msgStr;
 	string destStr;
@@ -107,7 +111,7 @@ void read_cb(struct bufferevent *bev, void *arg)
 
 	/* 解析数据包 */
 	msgStr = unpacket(input);
-	if(!msgStr == "")
+	if(msgStr == "")
 	{
 		printf("解析数据包出错。\n");
 		return;
@@ -158,6 +162,38 @@ void read_cb(struct bufferevent *bev, void *arg)
 			destStr = packet(msg.toString());
 			evbuffer_add(output, destStr.data(), destStr.size());
 			break;
+		case MsgType::MSG_LOGIN: 			/* 登录 */
+			/* 登录校验 */
+			u_tmp = us.findUserByUsernameAndPassword(
+					msg.getSrc().getUsername(),
+					msg.getSrc().getPassword()
+					);
+
+			/* 查无此人 */
+			if(!u_tmp)
+			{
+				msg.setType(MsgType::ERRNO_INEXISTENCE);
+				destStr = packet(msg.toString());
+				evbuffer_add(output, destStr.data(), destStr.size());
+				return;
+			}
+			
+			/* 登录成功 */
+			/* 修改在线状态 */
+			u_tmp->setStatus(UserStatus::USER_STAT_ONLINE);
+			us.updateUser(*u_tmp);
+			/* 返回用户其他(全部)数据 */
+			msg.setType(MsgType::ERRNO_SUCCESS);
+			msg.setSrc(*u_tmp);
+			destStr = packet(msg.toString());
+			evbuffer_add(output, destStr.data(), destStr.size());
+			break;
+		case MsgType::MSG_REGISTER: 		/* 注册 */
+			/* 调用service层，直接返回结果 */
+			msg.setType(us.addUser(msg.getSrc()));
+			destStr = packet(msg.toString());
+			evbuffer_add(output, destStr.data(), destStr.size());
+			break;
 		default: break;
 	}
 }
@@ -189,8 +225,29 @@ void event_cb(struct bufferevent *bev,short events, void *arg)
 	{
 		printf("连接出现错误！\n");
 	}
+	else if(events & BEV_EVENT_CONNECTED)
+	{
+		/* 注册可读事件 */
+		bufferevent_enable(bev, EV_READ);
+		//设置读超时时间 10s
+		struct timeval tTimeout = {10, 0};
+		bufferevent_set_timeouts(bev, &tTimeout, NULL);
+	}
+	else if(events & (BEV_EVENT_TIMEOUT | BEV_EVENT_READING))
+	{ 	/* 如果读超时，发送心跳包 */
+		Msg msg;
+		msg.setType(MsgType::MSG_HEARTBEAT);
+		string destStr = packet(msg.toString());
+		bufferevent_write(bev, destStr.data(), destStr.size());
+
+		/* 重新注册可读事件 */
+		bufferevent_enable(bev, EV_READ);
+	}
 
 	bufferevent_free(bev);
+
+	/* 下线处理 */
+
 
 	printf("bufferevent 资源已经被释放.\n");
 }
@@ -256,7 +313,7 @@ string packet(const string &msgStr)
 	header.compressflag = MsgHeaderType::COMPRESSED;
 	header.originsize = msgStr.size();
 	header.compresssize = compressBound(header.originsize);
-	
+
 	/* 压缩，插入消息头 */
 	if(header.compressflag == MsgHeaderType::COMPRESSED)
 	{

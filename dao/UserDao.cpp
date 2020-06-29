@@ -125,7 +125,8 @@ void UserDao::save(const User *user)
 		content = "insert into user values(null, " +
 			Specification::tranString(user->getUsername()) +
 			", " + Specification::tranString(user->getPassword()) +
-			", " + Specification::tranString(user->getMobile()) + ")";
+			", " + Specification::tranString(user->getMobile()) +
+			", " + to_string(user->getStatus()) + ")";
 		ConnectionPool::runNo(content);
 	}
 	else
@@ -134,6 +135,7 @@ void UserDao::save(const User *user)
 			Specification::tranString(user->getUsername()) +
 			", password = " + Specification::tranString(user->getPassword()) +
 			", mobile = " + Specification::tranString(user->getMobile()) +
+			", status = " + to_string(user->getStatus()) +
 			" where id = " + to_string(user->getId());
 		ConnectionPool::runNo(content);
 	}
