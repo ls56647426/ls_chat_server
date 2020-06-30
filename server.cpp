@@ -40,13 +40,15 @@
 
 /* custom lib */
 #include "server.h"
-#include "include/Msg.h"
 #include "service/UserService.h"
+#include "service/FriendService.h"
 
 #define SERV_PORT 5664
+#define UDP_SERV_PORT 7426
 #define SERV_IP "112.124.19.14"
 
 UserService us;
+FriendService fs;
 
 /* 
  * ===  FUNCTION  ======================================================================
@@ -101,9 +103,8 @@ void read_cb(struct bufferevent *bev, void *arg)
 {
 	printf("read_cb收到数据。\n");
 	Msg msg;
-	Group grp;
-	User src, dest, *u_tmp;
-	MsgInfo info;
+	User *u_tmp;
+	Friend _friend;
 	string msgStr;
 	string destStr;
 	struct evbuffer *input = bufferevent_get_input(bev);
@@ -118,42 +119,8 @@ void read_cb(struct bufferevent *bev, void *arg)
 		return;
 	}
 
-	/* 提取json数据 */
-	Json::CharReaderBuilder b;
-    Json::CharReader* reader(b.newCharReader());
-    Json::Value root;
-    JSONCPP_STRING errs;
-    bool ok = reader->parse(msgStr.data(), msgStr.data() + msgStr.size(), &root, &errs);
-    if (!ok || errs.size() != 0)
-    {
-        printf("invalid json: %s\n", msgStr.data());
-        delete reader;
-        return;
-    }
-    delete reader;
-
-	msg.setType(root["type"].asInt());
-	
-	grp.setId(root["group"]["id"].asInt());
-	grp.setName(root["group"]["name"].asString());
-	msg.setGroup(grp);
-	
-	src.setId(root["src"]["id"].asInt());
-	src.setUsername(root["src"]["username"].asString());
-	src.setPassword(root["src"]["password"].asString());
-	src.setMobile(root["src"]["mobile"].asString());
-	src.setStatus(root["src"]["status"].asInt64());
-	msg.setSrc(src);
-
-	dest.setId(root["dest"]["id"].asInt());
-	dest.setUsername(root["dest"]["username"].asString());
-	dest.setPassword(root["dest"]["password"].asString());
-	dest.setMobile(root["dest"]["mobile"].asString());
-	dest.setStatus(root["dest"]["status"].asInt());
-	msg.setDest(dest);
-
-	info.setInfo(root["info"]["info"].asString());
-	msg.setInfo(info);
+	/* json转Msg */
+	msg = jsonToMsg(msgStr);
 
 	/* 解析并处理 */
 	switch(msg.getType())
@@ -178,7 +145,7 @@ void read_cb(struct bufferevent *bev, void *arg)
 				evbuffer_add(output, destStr.data(), destStr.size());
 				return;
 			}
-			
+
 			/* 登录成功 */
 			/* 登录 */
 			tmp = u_tmp->getId();
@@ -208,6 +175,84 @@ void read_cb(struct bufferevent *bev, void *arg)
 			msg.setType(us.addUser(msg.getSrc()));
 			destStr = packet(msg.toString());
 			evbuffer_add(output, destStr.data(), destStr.size());
+			break;
+		case MsgType::MSG_ALTER_PWD: 		/* 修改密码 */
+			/* 修改校验 */
+			u_tmp = us.findUserByUsernameAndPwdAndMobile(
+					msg.getSrc().getUsername(),
+					msg.getSrc().getPassword(),
+					msg.getSrc().getMobile()
+					);
+
+			/* 查无此人 */
+			if(!u_tmp)
+			{
+				msg.setType(MsgType::ERRNO_INEXISTENCE);
+				destStr = packet(msg.toString());
+				evbuffer_add(output, destStr.data(), destStr.size());
+				return;
+			}
+
+			/* 修改密码 */
+			u_tmp->setPassword(msg.getDest().getPassword());
+			us.updateUser(*u_tmp);
+			msg.setType(MsgType::ERRNO_SUCCESS);
+			destStr = packet(msg.toString());
+			evbuffer_add(output, destStr.data(), destStr.size());
+			break;
+		case MsgType::MSG_FIND_PWD: 		/* 找回密码 */
+			/* 用户校验 */
+			u_tmp = us.findUserByUsernameAndMobile(
+					msg.getSrc().getUsername(),
+					msg.getSrc().getMobile()
+					);
+		
+			/* 查无此人 */
+			if(!u_tmp)
+			{
+				msg.setType(MsgType::ERRNO_INEXISTENCE);
+				destStr = packet(msg.toString());
+				evbuffer_add(output, destStr.data(), destStr.size());
+				return;
+			}
+
+			/* 找回密码 */
+			u_tmp->setPassword(msg.getDest().getPassword());
+			us.updateUser(*u_tmp);
+			msg.setType(MsgType::ERRNO_SUCCESS);
+			destStr = packet(msg.toString());
+			evbuffer_add(output, destStr.data(), destStr.size());
+			break;
+		case MsgType::COMMAND_FIND_USER: 		/* 查找用户 */
+			printf("接收到查找用户请求，开始查找。\n");
+			u_tmp = us.findUserByUsername(msg.getSrc().getUsername());
+			
+			/* 如果找到了，存入，没有找到，返回id是0的，也就是不需要操作 */
+			if(u_tmp)
+				msg.setSrc(*u_tmp);
+
+			msg.setType(MsgType::ERRNO_SUCCESS);
+			destStr = packet(msg.toString());
+			evbuffer_add(output, destStr.data(), destStr.size());
+			break;
+		case MsgType::COMMAND_ADD_USER: 		/* 加好友 */
+			/* 获取对方信息 */
+			u_tmp = us.findUserByUsername(msg.getDest().getUsername());
+
+			/* 原来不是好友 */
+			if(!fs.findFriend(msg.getSrc(), *u_tmp))
+			{
+				/* 添加好友 */
+				_friend.setUid1(msg.getSrc().getId());
+				_friend.setUid2(msg.getDest().getId());
+				fs.addFriend(_friend);
+			}
+			msg.setType(MsgType::ERRNO_SUCCESS);
+			destStr = packet(msg.toString());
+			evbuffer_add(output, destStr.data(), destStr.size());
+			break;
+		case MsgType::COMMAND_GET_FRIEND: 		/* 获取好友列表 */
+			getFriend(bev, msg);
 			break;
 		default: break;
 	}
@@ -279,6 +324,9 @@ void listener_cb(struct evconnlistener* listener, evutil_socket_t fd,
 {
 	struct event_base *base = (struct event_base*)ptr;
 	char buf[256];
+//	int udp_socket;
+//	struct sockaddr_in udp_addr;
+//	struct event udp_event;
 
 	struct sockaddr_in *clie_addr = (struct sockaddr_in *)addr;
 	evutil_inet_ntop(clie_addr->sin_family, &clie_addr->sin_addr, buf, sizeof(buf));
@@ -293,6 +341,21 @@ void listener_cb(struct evconnlistener* listener, evutil_socket_t fd,
 
 	//启动bufferevent的读缓冲区，默认是disable的.
 	bufferevent_enable(bev, EV_READ);
+
+	/* TODO:加入UDP通信 */
+/*	udp_socket = socket(AF_INET, SOCK_DGRAM, 0);
+	memset(&udp_addr, 0, sizeof(udp_addr));
+	udp_addr.sin_family = AF_INET;
+	udp_addr.sin_port = htons(UDP_SERV_PORT);
+	if(bind(udp_socket, (struct sockaddr *)&udp_addr, sizeof(udp_addr)))
+	{
+		perror("udp bind()");
+		exit(1);
+	}*/
+
+	/* Add the UDP event */
+/*	event_set(&udp_event, udp_socket, EV_READ | EV_PERSIST, udp_cb, NULL);
+	event_add(&udp_event, 0);*/
 }
 
 /* 
@@ -312,6 +375,57 @@ void signal_cb(evutil_socket_t sig, short events, void *arg)
 
 	event_base_loopexit(base, &delay);
 }
+
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  udp_cb
+ *  Description:  
+ * =====================================================================================
+ */
+/*
+void udp_cb(const int sock, short int which, void *arg)
+{
+	struct sockaddr_in udp_serv_addr;
+	socklen_t udp_serv_len = sizeof(udp_serv_addr);
+	char buf[BUFSIZ];
+	int ret;
+	string msgStr;
+	Msg msg;
+
+	memset(buf, 0, BUFSIZ);
+	ret = recvfrom(sock, &buf, sizeof(buf) - 1, 0, (struct sockaddr *)&udp_serv_addr, &udp_serv_len);
+	if(ret == -1)
+	{
+		perror("recvfrom()");
+		event_loopbreak();
+	}
+	else if(ret == 0)
+	{
+		printf("udp sock%d close\n", sock);
+		return;
+	}
+
+	printf("udp clinet: %s\n", buf);
+	msgStr = unpacket(buf, ret);
+	if(msgStr == "")
+	{
+		printf("解析数据包出错。\n");
+		return;
+	}
+	msg = jsonToMsg(msgStr);
+	switch(msg.getType())
+	{
+
+		default: break;
+	}*/
+
+	/* Send the data back to the client */
+/*	if(sendto(sock, buf, sizeof(buf), 0, (struct sockaddr *)&udp_serv_addr, udp_serv_len) == -1)
+	{
+		perror("sendto()");
+		event_loopbreak();
+	}
+}*/
 
 /* 
  * ===  FUNCTION  ======================================================================
@@ -437,5 +551,161 @@ string unpacket(evbuffer *input)
 	}
 
 	return string(res, header.originsize);
+}
+string unpacket(char *input, uint32_t size)
+{
+	char *res;
+	MsgHeader header;
+
+	/* 解析数据包 */
+	if(size < sizeof(header))
+	{
+		printf("收到数据，但长度不足，等待下次传输：%d\n", size);
+		return "";
+	}
+
+	/* 获取数据头 */
+	memcpy(&header, input, sizeof(header));
+
+	/* 压缩过，需要解压数据包再提取 */
+	if(header.compressflag == MsgHeaderType::COMPRESSED)
+	{
+		/* 包头有错误，立即关闭连接 */
+		if(header.originsize <= 0 ||
+				header.originsize > MSGINFO_MAX_LEN ||
+				header.compresssize <= 0 ||
+				header.compresssize > MSGINFO_MAX_LEN)
+		{
+			printf("包头错误：%d, %d\n", header.originsize, header.compresssize);
+			return "";
+		}
+
+		/* 收到的数据不够一个完整的数据包 */
+		if(size < sizeof(header) + header.compresssize)
+			return "";
+
+		/* 获取数据 */
+		char *buf = new char[header.compresssize];
+		memcpy(buf, input + sizeof(header), header.compresssize);
+
+		/* 解压数据 */
+		res = new char[header.originsize];
+		int ret = uncompress((Bytef*)res, (uLongf*)&header.originsize, (Bytef*)buf, header.compresssize);
+		if(ret != Z_OK)
+		{
+			printf("解压失败 %d：%d\n", ret, header.originsize);
+			return "";
+		}
+	}
+	/* 没压缩过，直接提取 */
+	else
+	{
+		/* 包头有错误，立即关闭连接 */
+		if(header.originsize <= 0 ||
+				header.originsize > MSGINFO_MAX_LEN)
+		{
+			printf("包头错误：%d\n", header.originsize);
+			return "";
+		}
+
+		/* 收到的数据不够一个完整的数据包 */
+		if(size < sizeof(header) + header.originsize)
+			return "";
+
+		/* 获取数据 */
+		res = new char[header.originsize];
+		memcpy(res, input + sizeof(header), header.originsize);
+	}
+
+	return string(res, header.originsize);
+}
+
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  jsonToMsg
+ *  Description:  
+ * =====================================================================================
+ */
+Msg jsonToMsg(const string &jsonStr)
+{
+	Msg msg;
+	Group grp;
+	User src, dest;
+	MsgInfo info;
+	
+	/* 提取json数据 */
+	Json::CharReaderBuilder b;
+    Json::CharReader* reader(b.newCharReader());
+    Json::Value root;
+    JSONCPP_STRING errs;
+    bool ok = reader->parse(jsonStr.data(), jsonStr.data() + jsonStr.size(), &root, &errs);
+    if (!ok || errs.size() != 0)
+    {
+        printf("invalid json: %s\n", jsonStr.data());
+        delete reader;
+        return msg;
+    }
+    delete reader;
+
+	msg.setType(root["type"].asInt());
+	
+	grp.setId(root["group"]["id"].asInt());
+	grp.setName(root["group"]["name"].asString());
+	msg.setGroup(grp);
+	
+	src.setId(root["src"]["id"].asInt());
+	src.setUsername(root["src"]["username"].asString());
+	src.setPassword(root["src"]["password"].asString());
+	src.setHead_portrait(root["src"]["head_portrait"].asString());
+	src.setNickname(root["src"]["nickname"].asString());
+	src.setSignature(root["src"]["signature"].asString());
+	src.setSex(root["src"]["sex"].asString());
+	src.setBirthday(root["src"]["birthday"].asString());
+	src.setLocation(root["src"]["location"].asString());
+	src.setProfession(root["src"]["profession"].asString());
+	src.setMobile(root["src"]["mobile"].asString());
+	src.setEmail(root["src"]["email"].asString());
+	src.setStatus(root["src"]["status"].asInt());
+	msg.setSrc(src);
+
+	dest.setId(root["dest"]["id"].asInt());
+	dest.setUsername(root["dest"]["username"].asString());
+	dest.setPassword(root["dest"]["password"].asString());
+	dest.setHead_portrait(root["dest"]["head_portrait"].asString());
+	dest.setNickname(root["dest"]["nickname"].asString());
+	dest.setSignature(root["dest"]["signature"].asString());
+	dest.setSex(root["dest"]["sex"].asString());
+	dest.setBirthday(root["dest"]["birthday"].asString());
+	dest.setLocation(root["dest"]["location"].asString());
+	dest.setProfession(root["dest"]["profession"].asString());
+	dest.setMobile(root["dest"]["mobile"].asString());
+	dest.setEmail(root["dest"]["email"].asString());
+	dest.setStatus(root["dest"]["status"].asInt());
+	msg.setDest(dest);
+
+	info.setInfo(root["info"]["info"].asString());
+//	info.setJsonInfo(root["info"]["jsonInfo"].asString());
+	msg.setInfo(info);
+
+	return msg;
+}
+
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  getFriend
+ *  Description:  
+ * =====================================================================================
+ */
+void getFriend(struct bufferevent *bev, Msg &msg)
+{
+	MsgInfo info;
+	string destStr;
+
+	list<User> list = fs.findUserAllByUser(msg.getSrc());
+
+	info.setUserListInfo(list);
+	msg.setInfo(info);
+	destStr = packet(msg.toString());
+	bufferevent_write(bev, destStr.data(), destStr.size());
 }
 

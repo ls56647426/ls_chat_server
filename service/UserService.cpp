@@ -49,6 +49,7 @@ User *UserService::findUserByUsernameAndPassword(const string &username, const s
 uint32_t UserService::addUser(const User &user)
 {
 	Specification spec;
+	User *u_tmp;
 
 	/* 校验username */
 	spec.setSqlWhere(
@@ -73,17 +74,32 @@ uint32_t UserService::addUser(const User &user)
 	if(ud.findOne(spec))
 	{
 		printf("该手机号已被绑定。\n");
-		return ERRNO_MOBILE_ALREADYEXIST;
+		return MsgType::ERRNO_MOBILE_ALREADYEXIST;
+	}
+
+	/* 校验邮箱 */
+	spec.setSqlWhere(
+			Specification::equal(
+				"email",
+				Specification::tranString(user.getEmail())
+				)
+			);
+	u_tmp = ud.findOne(spec);
+	if(u_tmp && u_tmp->getEmail() != "")
+	{
+		printf("该邮箱已被绑定。\n");
+		return MsgType::ERRNO_EMAIL_ALREADYEXIST;
 	}
 
 	ud.save(&user);
-	return ERRNO_SUCCESS;
+	return MsgType::ERRNO_SUCCESS;
 }
 
 /* 修改用户数据 */
 uint32_t UserService::updateUser(const User &user)
 {
 	Specification spec;
+	User *u_tmp;
 
 	/* 校验username */
 	spec.setSqlWhere(
@@ -114,10 +130,83 @@ uint32_t UserService::updateUser(const User &user)
 	if(ud.findOne(spec))
 	{
 		printf("该手机号已被绑定。\n");
-		return ERRNO_MOBILE_ALREADYEXIST;
+		return MsgType::ERRNO_MOBILE_ALREADYEXIST;
+	}
+
+	/* 校验邮箱 */
+	spec.setSqlWhere(
+			Specification::And(
+				Specification::equal(
+					"email",
+					Specification::tranString(user.getEmail())
+					),
+				Specification::notEqual(
+					"id",
+					to_string(user.getId())
+					)
+				)
+			);
+	u_tmp = ud.findOne(spec);
+	if(u_tmp && u_tmp->getEmail() != "")
+	{
+		printf("该邮箱已被绑定。\n");
+		return MsgType::ERRNO_EMAIL_ALREADYEXIST;
 	}
 
 	ud.save(&user);
-	return ERRNO_SUCCESS;
+	return MsgType::ERRNO_SUCCESS;
+}
+
+/* 通过username,password,mobile查找用户 */
+User *UserService::findUserByUsernameAndPwdAndMobile(
+		const string &username, const string &password, const string &mobile)
+{
+	Specification spec;
+
+	list<string> list;
+	list.push_back(
+			Specification::equal(
+				"username",
+				Specification::tranString(username)
+				)
+			);
+	list.push_back(
+			Specification::equal(
+				"password",
+				Specification::tranString(password)
+				)
+			);
+	list.push_back(
+			Specification::equal(
+				"mobile",
+				Specification::tranString(mobile)
+				)
+			);
+	spec.setSqlWhere(Specification::And(list));
+
+	return ud.findOne(spec);
+}
+
+/* 通过username,mobile查找用户 */
+User *UserService::findUserByUsernameAndMobile(const string &username, const string &mobile)
+{
+	Specification spec;
+
+	list<string> list;
+	list.push_back(
+			Specification::equal(
+				"username",
+				Specification::tranString(username)
+				)
+			);
+	list.push_back(
+			Specification::equal(
+				"mobile",
+				Specification::tranString(mobile)
+				)
+			);
+	spec.setSqlWhere(Specification::And(list));
+
+	return ud.findOne(spec);
 }
 

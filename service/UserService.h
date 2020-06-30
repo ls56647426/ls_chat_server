@@ -18,6 +18,13 @@ public:
 	/* 通过username和password查找用户 */
 	User *findUserByUsernameAndPassword(const string &username, const string &password);
 
+	/* 通过username,password,mobile查找用户 */
+	User *findUserByUsernameAndPwdAndMobile(
+			const string &username, const string &password, const string &mobile);
+
+	/* 通过username,mobile查找用户 */
+	User *findUserByUsernameAndMobile(const string &username, const string &mobile);
+
 	/* 将user存入数据库 */
 	uint32_t addUser(const User &user);
 
