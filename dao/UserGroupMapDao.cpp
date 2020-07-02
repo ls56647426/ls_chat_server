@@ -21,7 +21,7 @@ UserGroupMap *UserGroupMapDao::findOne(const uint32_t &id)
 //		return userGroupMapCache.object(key);
 
 	/* 组合sql语句 */
-	string content = "select * from user_group_map where id = " + to_string(id);
+	string content = "select * from `user_group_map` where id = " + to_string(id);
 
 	/* 获得查询结果 */
 	MYSQL_RES* rec = ConnectionPool::runOne(content);
@@ -53,7 +53,7 @@ UserGroupMap *UserGroupMapDao::findOne(const Specification &spec)
 //		return userGroupMapCache.object(spec->getSqlWhere());
 
 	/* 构建sql语句 */
-	string content = "select * from user_group_map where " + spec.getSqlWhere();
+	string content = "select * from `user_group_map` where " + spec.getSqlWhere();
 
 	/* 获得查询结果 */
 	MYSQL_RES* rec = ConnectionPool::runOne(content);
@@ -86,7 +86,7 @@ list<UserGroupMap> UserGroupMapDao::findAll(const Specification &spec)
 	list<UserGroupMap> res;
 
 	/* 构建sql语句 */
-	string content = "select * from user_group_map " +
+	string content = "select * from `user_group_map` " +
 				(spec.getSqlWhere() == "" ? "" : "where " + spec.getSqlWhere());
 
 	/* 获得查询结果 */
@@ -116,13 +116,13 @@ list<UserGroupMap> UserGroupMapDao::findAll(const Specification &spec)
 void UserGroupMapDao::save(const UserGroupMap *userGroupMap)
 {
 	/* 先判断该 群/成员 数据是否存在，以主键id来判断 */
-	string content = "select * from user_group_map where id = " + userGroupMap->getId();
+	string content = "select * from `user_group_map` where id = " + userGroupMap->getId();
 	MYSQL_RES* rec = ConnectionPool::runOne(content);
 
 	content.clear();
 	if(rec == nullptr)
 	{	/* 如果不存在，则insert */
-		content = "insert into user_group_map values(null, " +
+		content = "insert into `user_group_map` values(null, " +
 			to_string(userGroupMap->getUid()) + ", " +
 			to_string(userGroupMap->getGid()) + ", " +
 			to_string(userGroupMap->getStatus()) + ", " +
@@ -132,7 +132,7 @@ void UserGroupMapDao::save(const UserGroupMap *userGroupMap)
 	}
 	else
 	{	/* 如果存在，则update */
-		content = "update user_group_map set uid = " +
+		content = "update `user_group_map` set uid = " +
 				to_string(userGroupMap->getUid()) +
 				", gid = " + to_string(userGroupMap->getGid()) +
 				", status = " + to_string(userGroupMap->getStatus()) +
@@ -151,7 +151,7 @@ void UserGroupMapDao::save(const UserGroupMap *userGroupMap)
 void UserGroupMapDao::del(const uint32_t &id)
 {
 	/* 先判断该 群/成员 数据是否存在，以主键id来判断 */
-	string content = "select * from user_group_map where id = " + to_string(id);
+	string content = "select * from `user_group_map` where id = " + to_string(id);
 	MYSQL_RES* rec = ConnectionPool::runOne(content);
 
 	/* 判空 */
@@ -162,7 +162,7 @@ void UserGroupMapDao::del(const uint32_t &id)
 	}
 
 	/* 删除该 群/成员 数据 */
-	content = "delete from user_group_map where id = " + to_string(id);
+	content = "delete from `user_group_map` where id = " + to_string(id);
 	ConnectionPool::runNo(content);
 
 	/* 清理缓存 */

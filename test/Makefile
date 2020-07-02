@@ -47,11 +47,20 @@ RecordService_obj=RecordServiceTest.o \
 				  User.o \
 				  UserDao.o
 
+MessageService_obj=MessageServiceTest.o \
+				   Message.o \
+				   MessageDao.o \
+				   MessageService.o \
+				   $(ConnectionPool_lib) \
+				   User.o \
+				   UserDao.o
+
 target=UserServiceTest \
 	   GroupServiceTest \
 	   FriendServiceTest \
 	   UserGroupMapServiceTest \
-	   RecordServiceTest
+	   RecordServiceTest \
+	   MessageServiceTest
 
 
 LIBS=-L/usr/lib64/mysql/ -lmysqlclient
@@ -79,6 +88,9 @@ ConnectionPoolTest:$(ConnectionPool_obj)
 	$(CC) $^ -o $@ $(CFLAGS)
 
 RecordServiceTest:$(RecordService_obj)
+	$(CC) $^ -o $@ $(CFLAGS)
+
+MessageServiceTest:$(MessageService_obj)
 	$(CC) $^ -o $@ $(CFLAGS)
 
 UserServiceTest.o:UserServiceTest.cpp ../pojo/User.cpp ../pojo/User.h \
@@ -164,6 +176,23 @@ RecordDao.o:../dao/RecordDao.cpp ../dao/RecordDao.h \
 RecordService.o:../service/RecordService.cpp ../service/RecordService.h \
 	../dao/RecordDao.cpp ../dao/RecordDao.h \
 	../pojo/Record.cpp ../pojo/Record.h
+	$(CC) -c $< -o $@ $(CFLAGS)
+
+MessageServiceTest.o:MessageServiceTest.cpp ../pojo/Message.cpp ../pojo/Message.h \
+	../dao/MessageDao.cpp ../dao/MessageDao.h \
+	../service/MessageService.cpp ../service/MessageService.h
+	$(CC) -c $< -o $@ $(CFLAGS)
+
+Message.o:../pojo/Message.cpp ../pojo/Message.h
+	$(CC) -c $< -o $@ $(CFLAGS)
+
+MessageDao.o:../dao/MessageDao.cpp ../dao/MessageDao.h \
+	../pojo/Message.cpp ../pojo/Message.h
+	$(CC) -c $< -o $@ $(CFLAGS)
+
+MessageService.o:../service/MessageService.cpp ../service/MessageService.h \
+	../pojo/Message.cpp ../pojo/Message.h \
+	../dao/MessageDao.cpp ../dao/MessageDao.h
 	$(CC) -c $< -o $@ $(CFLAGS)
 
 ConnectionPool.o:../include/ConnectionPool.cpp ../include/ConnectionPool.h \

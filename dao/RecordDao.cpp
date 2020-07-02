@@ -80,7 +80,7 @@ list<Record> RecordDao::findAll(const Specification &spec)
 	list<Record> res;
 
 	/* 构建sql语句 */
-	string content = "select * from record " +
+	string content = "select * from `record` " +
 		(spec.getSqlWhere() == "" ? "" : "where " + spec.getSqlWhere());
 
 	/* 获得查询结果 */
@@ -111,13 +111,13 @@ list<Record> RecordDao::findAll(const Specification &spec)
 void RecordDao::save(const Record *record)
 {
 	/* 先判断该用户数据是否存在，以主键id来判断 */
-	string content = "select * from record where id = " + to_string(record->getId());
+	string content = "select * from `record` where id = " + to_string(record->getId());
 	MYSQL_RES* rec = ConnectionPool::runOne(content);
 
 	content.clear();
 	if(rec == nullptr)
 	{	/* 如果不存在，则insert */
-		content = "insert into record values(null, " +
+		content = "insert into `record` values(null, " +
 			to_string(record->getGid()) + ", " +
 			to_string(record->getSuid()) + ", " +
 			to_string(record->getDuid()) + ", " +
@@ -127,7 +127,7 @@ void RecordDao::save(const Record *record)
 	}
 	else
 	{	/* 如果存在，则update */
-		content = "update record set gid = " +
+		content = "update `record` set gid = " +
 			to_string(record->getGid()) + ", suid = " +
 			to_string(record->getSuid()) + ", duid = " +
 			to_string(record->getDuid()) + ", content = " +
@@ -142,7 +142,7 @@ void RecordDao::save(const Record *record)
 void RecordDao::del(const uint32_t &id)
 {
 	/* 先判断该用户数据是否存在，以主键id来判断 */
-	string content = "select * from record where id = " + to_string(id);
+	string content = "select * from `record` where id = " + to_string(id);
 	MYSQL_RES* rec = ConnectionPool::runOne(content);
 
 	/* 判空 */
@@ -154,7 +154,7 @@ void RecordDao::del(const uint32_t &id)
 
 	/* 删除该记录数据 */
 	content.clear();
-	content = "delete from record where id = " + to_string(id);
+	content = "delete from `record` where id = " + to_string(id);
 	ConnectionPool::runNo(content);
 }
 

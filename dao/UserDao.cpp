@@ -20,7 +20,7 @@ User *UserDao::findOne(const uint32_t &id)
 //		return userCache.object(key);
 
 	/* 组合sql语句 */
-	string content = "select * from user where id = " + to_string(id);
+	string content = "select * from `user` where id = " + to_string(id);
 
 	/* 获得查询结果 */
 	MYSQL_RES* rec = ConnectionPool::runOne(content);
@@ -60,7 +60,7 @@ User *UserDao::findOne(const Specification &spec)
 	//		return userCache.object("findOne" + spec->getSqlWhere());
 
 	/* 构建sql语句 */
-	string content = "select * from user where " + spec.getSqlWhere();
+	string content = "select * from `user` where " + spec.getSqlWhere();
 
 	/* 获得查询结果 */
 	MYSQL_RES* rec = ConnectionPool::runOne(content);
@@ -101,7 +101,7 @@ list<User> UserDao::findAll(const Specification &spec)
 	list<User> res;
 
 	/* 构建sql语句 */
-	string content = "select * from user " +
+	string content = "select * from `user` " +
 		(spec.getSqlWhere() == "" ? "" : "where " + spec.getSqlWhere());
 
 	/* 获得查询结果 */
@@ -143,13 +143,13 @@ list<User> UserDao::findAll(const Specification &spec)
 void UserDao::save(const User *user)
 {
 	/* 先判断该用户数据是否存在，以主键id来判断 */
-	string content = "select * from user where id = " + to_string(user->getId());
+	string content = "select * from `user` where id = " + to_string(user->getId());
 	MYSQL_RES* rec = ConnectionPool::runOne(content);
 
 	content.clear();
 	if(rec == nullptr)
 	{	/* 如果不存在，则insert */
-		content = "insert into user values(null, " +
+		content = "insert into `user` values(null, " +
 			Specification::tranString(user->getUsername()) +
 			", " + Specification::tranString(user->getPassword()) +
 			", " + Specification::tranString(user->getHead_portrait()) +
@@ -167,7 +167,7 @@ void UserDao::save(const User *user)
 	}
 	else
 	{	/* 如果存在，则update */
-		content = "update user set username = " +
+		content = "update `user` set username = " +
 			Specification::tranString(user->getUsername()) +
 			", password = " + Specification::tranString(user->getPassword()) +
 			", head_portrait = " + Specification::tranString(user->getHead_portrait()) +
@@ -194,7 +194,7 @@ void UserDao::save(const User *user)
 void UserDao::del(const uint32_t &id)
 {
 	/* 先判断该用户数据是否存在，以主键id来判断 */
-	string content = "select * from user where id = " + to_string(id);
+	string content = "select * from `user` where id = " + to_string(id);
 	MYSQL_RES* rec = ConnectionPool::runOne(content);
 
 	/* 判空 */
@@ -206,7 +206,7 @@ void UserDao::del(const uint32_t &id)
 
 	/* 删除该用户数据 */
 	content.clear();
-	content = "delete from user where id = " + to_string(id);
+	content = "delete from `user` where id = " + to_string(id);
 	ConnectionPool::runNo(content);
 
 	/* 清理缓存 */

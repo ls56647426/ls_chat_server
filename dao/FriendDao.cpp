@@ -21,7 +21,7 @@ Friend *FriendDao::findOne(const uint32_t &id)
 //		return friendCache.object(key);
 
 	/* 组合sql语句 */
-	string content = "select * from friend where id = " + to_string(id);
+	string content = "select * from `friend` where id = " + to_string(id);
 
 	/* 获得查询结果 */
 	MYSQL_RES* rec = ConnectionPool::runOne(content);
@@ -52,7 +52,7 @@ Friend *FriendDao::findOne(const Specification &spec)
 //		return friendCache.object("findOne" + spec->getSqlWhere());
 
 	/* 构建sql语句 */
-	string content = "select * from friend where " + spec.getSqlWhere();
+	string content = "select * from `friend` where " + spec.getSqlWhere();
 
 	/* 获得查询结果 */
 	MYSQL_RES* rec = ConnectionPool::runOne(content);
@@ -84,7 +84,7 @@ list<Friend> FriendDao::findAll(const Specification &spec)
 	list<Friend> res;
 
 	/* 构建sql语句 */
-	string content = "select * from friend " +
+	string content = "select * from `friend` " +
 				(spec.getSqlWhere() == "" ? "" : "where " + spec.getSqlWhere());
 
 	/* 获得查询结果 */
@@ -113,14 +113,14 @@ list<Friend> FriendDao::findAll(const Specification &spec)
 void FriendDao::save(const Friend *_friend)
 {
 	/* 先判断该好友数据是否存在，以主键id来判断 */
-	string content = "select * from friend where id = " +
+	string content = "select * from `friend` where id = " +
 		to_string(_friend->getId());
 	MYSQL_RES* rec = ConnectionPool::runOne(content);
 
 	content.clear();
 	if(rec == nullptr)
 	{	/* 如果不存在，则insert */
-		content = "insert into friend values(null, " +
+		content = "insert into `friend` values(null, " +
 			to_string(_friend->getSuid()) + ", " +
 			to_string(_friend->getDuid()) + ", " +
 			Specification::tranString(_friend->getDate()) + ", " +
@@ -129,7 +129,7 @@ void FriendDao::save(const Friend *_friend)
 	}
 	else
 	{	/* 如果存在，则update */
-		content = "update friend set suid = " +
+		content = "update `friend` set suid = " +
 			to_string(_friend->getSuid()) +
 			", duid = " + to_string(_friend->getDuid()) +
 			", date = " + Specification::tranString(_friend->getDate()) +
@@ -147,7 +147,7 @@ void FriendDao::save(const Friend *_friend)
 void FriendDao::del(const uint32_t &id)
 {
 	/* 先判断该好友数据是否存在，以主键id来判断 */
-	string content = "select * from friend where id = " + to_string(id);
+	string content = "select * from `friend` where id = " + to_string(id);
 	MYSQL_RES* rec = ConnectionPool::runOne(content);
 
 	/* 判空 */
@@ -158,7 +158,7 @@ void FriendDao::del(const uint32_t &id)
 	}
 
 	/* 删除该好友数据 */
-	content = "delete from friend where id = " + to_string(id);
+	content = "delete from `friend` where id = " + to_string(id);
 	ConnectionPool::runNo(content);
 
 	/* 清理缓存 */
