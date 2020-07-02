@@ -13,8 +13,8 @@ list<User> FriendService::findUserAllByUser(const User &user)
 	
 	for(Friend _friend : friList)
 	{
-		int uid = (_friend.getUid1() == user.getId() ? _friend.getUid2() :
-				_friend.getUid1());
+		int uid = (_friend.getSuid() == user.getId() ? _friend.getDuid() :
+				_friend.getSuid());
 		User *user = ud.findOne(uid);
 		res.push_back(*user);
 		delete user;
@@ -28,8 +28,8 @@ list<Friend> FriendService::findAllByUser(const User &user)
 	Specification spec;
 	spec.setSqlWhere(
 			Specification::Or(
-				Specification::equal("uid1", to_string(user.getId())),
-				Specification::equal("uid2", to_string(user.getId()))
+				Specification::equal("suid", to_string(user.getId())),
+				Specification::equal("duid", to_string(user.getId()))
 				)
 			);
 
@@ -45,14 +45,18 @@ Friend *FriendService::findFriend(const User &user1, const User &user2)
 /* 根据Uid查找好友 */
 Friend *FriendService::findFriendByUid(uint32_t uid1, uint32_t uid2)
 {
-	/* 保证uid < uid2 */
-	if(uid1 > uid2) uid1 ^= uid2 ^= uid1 ^= uid2;
 	Specification spec;
 	spec.setSqlWhere(
-			Specification::And(
-				Specification::equal("uid1", to_string(uid1)),
-				Specification::equal("uid2", to_string(uid2))
-				)
+			Specification::Or(
+				Specification::And(
+					Specification::equal("suid", to_string(uid1)),
+					Specification::equal("duid", to_string(uid2))
+					),
+				Specification::And(
+					Specification::equal("suid", to_string(uid2)),
+					Specification::equal("duid", to_string(uid1))
+					)
+			)
 			);
 
 	return fd.findOne(spec);
@@ -61,14 +65,6 @@ Friend *FriendService::findFriendByUid(uint32_t uid1, uint32_t uid2)
 /* 加好友 */
 void FriendService::addFriend(Friend _friend)
 {
-	/* 保证uid1 < uid2 */
-	uint32_t uid1 = _friend.getUid1(), uid2 = _friend.getUid2();
-	if(uid1 > uid2)
-	{
-		_friend.setUid1(uid2);
-		_friend.setUid2(uid1);
-	}
-
 	fd.save(&_friend);
 }
 

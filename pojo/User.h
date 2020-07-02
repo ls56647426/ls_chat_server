@@ -41,8 +41,6 @@ public:
 	uint32_t getStatus() const;
 	void setStatus(const uint32_t &value);
 
-	string toString() const;
-
 	string getHead_portrait() const;
 	void setHead_portrait(const string &value);
 
@@ -67,6 +65,11 @@ public:
 	string getEmail() const;
 	void setEmail(const string &value);
 
+	string getDate() const;
+	void setDate(const string &value);
+
+	string toString() const;
+
 private:
 	/* 字段映射 */
 	uint32_t id;
@@ -82,6 +85,7 @@ private:
 	string mobile;
 	string email;
 	uint32_t status;
+	string date;
 };
 
 #endif // USER_H

@@ -38,6 +38,7 @@ UserGroupMap *UserGroupMapDao::findOne(const uint32_t &id)
 	userGroupMap->setGid(atoi(row[2]));
 	userGroupMap->setStatus(atoi(row[3]));
 	userGroupMap->setPermission(atoi(row[4]));
+	userGroupMap->setDate(row[5]);
 
 	/* 加入缓存 */
 //	userGroupMapCache.insert(key, userGroupMap);
@@ -69,6 +70,7 @@ UserGroupMap *UserGroupMapDao::findOne(const Specification &spec)
 	userGroupMap->setGid(atoi(row[2]));
 	userGroupMap->setStatus(atoi(row[3]));
 	userGroupMap->setPermission(atoi(row[4]));
+	userGroupMap->setDate(row[5]);
 
 	/* 加入缓存 */
 //	userGroupMapCache.insert(spec->getSqlWhere(), userGroupMap);
@@ -100,6 +102,7 @@ list<UserGroupMap> UserGroupMapDao::findAll(const Specification &spec)
 		userGroupMap.setGid(atoi(row[2]));
 		userGroupMap.setStatus(atoi(row[3]));
 		userGroupMap.setPermission(atoi(row[4]));
+		userGroupMap.setDate(row[5]);
 		res.push_back(userGroupMap);
 	}
 
@@ -123,7 +126,8 @@ void UserGroupMapDao::save(const UserGroupMap *userGroupMap)
 			to_string(userGroupMap->getUid()) + ", " +
 			to_string(userGroupMap->getGid()) + ", " +
 			to_string(userGroupMap->getStatus()) + ", " +
-			to_string(userGroupMap->getPermission()) + ")";
+			to_string(userGroupMap->getPermission()) +
+			Specification::tranString(userGroupMap->getDate()) + ")";
 		ConnectionPool::runNo(content);
 	}
 	else
@@ -133,6 +137,7 @@ void UserGroupMapDao::save(const UserGroupMap *userGroupMap)
 				", gid = " + to_string(userGroupMap->getGid()) +
 				", status = " + to_string(userGroupMap->getStatus()) +
 				", permission = " + to_string(userGroupMap->getPermission()) +
+				", date = " + Specification::tranString(userGroupMap->getDate()) +
 				" where id = " + to_string(userGroupMap->getId());
 		ConnectionPool::runNo(content);
 	}

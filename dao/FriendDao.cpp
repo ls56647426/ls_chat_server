@@ -34,8 +34,10 @@ Friend *FriendDao::findOne(const uint32_t &id)
 	MYSQL_ROW row = mysql_fetch_row(rec);
 	Friend* _friend = new Friend;
 	_friend->setId(atoi(row[0]));
-	_friend->setUid1(atoi(row[1]));
-	_friend->setUid2(atoi(row[2]));
+	_friend->setSuid(atoi(row[1]));
+	_friend->setDuid(atoi(row[2]));
+	_friend->setDate(row[3]);
+	_friend->setPermission(atoi(row[4]));
 
 	/* 加入缓存 */
 //	friendCache.insert(key, _friend);
@@ -63,8 +65,10 @@ Friend *FriendDao::findOne(const Specification &spec)
 	MYSQL_ROW row = mysql_fetch_row(rec);
 	Friend* _friend = new Friend;
 	_friend->setId(atoi(row[0]));
-	_friend->setUid1(atoi(row[1]));
-	_friend->setUid2(atoi(row[2]));
+	_friend->setSuid(atoi(row[1]));
+	_friend->setDuid(atoi(row[2]));
+	_friend->setDate(row[3]);
+	_friend->setPermission(atoi(row[4]));
 	
 	/* 加入缓存 */
 //	friendCache.insert("findOne" + spec->getSqlWhere(), _friend);
@@ -92,8 +96,10 @@ list<Friend> FriendDao::findAll(const Specification &spec)
 	{
 		Friend _friend;
 		_friend.setId(atoi(row[0]));
-		_friend.setUid1(atoi(row[1]));
-		_friend.setUid2(atoi(row[2]));
+		_friend.setSuid(atoi(row[1]));
+		_friend.setDuid(atoi(row[2]));
+		_friend.setDate(row[3]);
+		_friend.setPermission(atoi(row[4]));
 		res.push_back(_friend);
 	}
 
@@ -115,15 +121,19 @@ void FriendDao::save(const Friend *_friend)
 	if(rec == nullptr)
 	{	/* 如果不存在，则insert */
 		content = "insert into friend values(null, " +
-			to_string(_friend->getUid1()) + ", " +
-			to_string(_friend->getUid2()) + ")";
+			to_string(_friend->getSuid()) + ", " +
+			to_string(_friend->getDuid()) + ", " +
+			Specification::tranString(_friend->getDate()) + ", " +
+			to_string(_friend->getPermission()) + ")";
 		ConnectionPool::runNo(content);
 	}
 	else
 	{	/* 如果存在，则update */
-		content = "update friend set uid1 = " +
-			to_string(_friend->getUid1()) +
-			", uid2 = " + to_string(_friend->getUid2()) +
+		content = "update friend set suid = " +
+			to_string(_friend->getSuid()) +
+			", duid = " + to_string(_friend->getDuid()) +
+			", date = " + Specification::tranString(_friend->getDate()) +
+			", permission = " + to_string(_friend->getPermission()) +
 			" where id = " + to_string(_friend->getId());
 		ConnectionPool::runNo(content);
 	}

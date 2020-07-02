@@ -34,7 +34,10 @@ Group *GroupDao::findOne(const uint32_t &id)
 	MYSQL_ROW row = mysql_fetch_row(rec);
 	Group* group = new Group;
 	group->setId(atoi(row[0]));
-	group->setName(row[1]);
+	group->setNum(row[1]);
+	group->setName(row[2]);
+	group->setDescription(row[3]);
+	group->setDate(row[4]);
 
 	/* 加入缓存 */
 //	groupCache.insert(key, group);
@@ -62,7 +65,10 @@ Group *GroupDao::findOne(const Specification &spec)
 	MYSQL_ROW row = mysql_fetch_row(rec);
 	Group* group = new Group;
 	group->setId(atoi(row[0]));
-	group->setName(row[1]);
+	group->setNum(row[1]);
+	group->setName(row[2]);
+	group->setDescription(row[3]);
+	group->setDate(row[4]);
 
 	/* 加入缓存 */
 //	groupCache.insert(spec->getSqlWhere(), group);
@@ -94,7 +100,10 @@ list<Group> GroupDao::findAll(const Specification &spec)
 	{
 		Group group;
 		group.setId(atoi(row[0]));
-		group.setName(row[1]);
+		group.setNum(row[1]);
+		group.setName(row[2]);
+		group.setDescription(row[3]);
+		group.setDate(row[4]);
 		res.push_back(group);
 	}
 
@@ -116,13 +125,19 @@ void GroupDao::save(const Group *group)
 	if(rec == nullptr)
 	{	/* 如果不存在，则insert */
 		content = "insert into `group` values(null, " +
-				Specification::tranString(group->getName()) + ")";
+			Specification::tranString(group->getNum()) +
+			Specification::tranString(group->getName()) +
+			Specification::tranString(group->getDescription()) +
+			Specification::tranString(group->getDate()) + ")";
 		ConnectionPool::runNo(content);
 	}
 	else
 	{	/* 如果存在，则update */
-		content = "update `group` set name = " +
-			Specification::tranString(group->getName()) +
+		content = "update `group` set num = " +
+			Specification::tranString(group->getNum()) + ", name = " +
+			Specification::tranString(group->getName()) + ", description = " +
+			Specification::tranString(group->getDescription()) + ", date = " +
+			Specification::tranString(group->getDate()) +
 			" where id = " + to_string(group->getId()) + ")";
 		ConnectionPool::runNo(content);
 	}

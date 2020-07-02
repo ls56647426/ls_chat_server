@@ -5,8 +5,17 @@ User::User()
 	id = 0;
 	username.clear();
 	password.clear();
+	head_portrait.clear();
+	nickname.clear();
+	signature.clear();
+	sex.clear();
+	birthday.clear();
+	location.clear();
+	profession.clear();
 	mobile.clear();
+	email.clear();
 	status = 0;
+	date.clear();
 }
 
 uint32_t User::getId() const
@@ -139,10 +148,20 @@ void User::setEmail(const string &value)
 	email = value;
 }
 
+string User::getDate() const
+{
+    return date;
+}
+
+void User::setDate(const string &value)
+{
+    date = value;
+}
+
 string User::toString() const
 {
-	return "{\"id\":" + to_string(id) +
-			", \"username\":\"" + username +
+    return "{\"id\":" + to_string(id) +
+            ", \"username\":\"" + username +
 			"\", \"password\":\"" + password +
 			"\", \"head_portrait\":\"" + head_portrait +
 			"\", \"nickname\":\"" + nickname +
@@ -153,5 +172,6 @@ string User::toString() const
 			"\", \"profession\":\"" + profession +
 			"\", \"mobile\":\"" + mobile +
 			"\", \"email\":\"" + email +
-			"\", \"status\":" + to_string(status) + "}";
+			"\", \"status\":" + to_string(status) +
+			"\", \"date\":\"" + date + "\"}";
 }
