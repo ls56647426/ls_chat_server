@@ -1,15 +1,64 @@
 obj=$(wildcard *.o)
-ConnectionPool_lib=ConnectionPool.o ConfigFileReader.o Specification.o
-UserService_obj=UserServiceTest.o User.o UserDao.o UserService.o $(ConnectionPool_lib)
-GroupService_obj=GroupServiceTest.o Group.o GroupDao.o GroupService.o $(ConnectionPool_lib)\
-				 User.o UserDao.o UserService.o
-FriendService_obj=FriendServiceTest.o Friend.o FriendDao.o FriendService.o $(ConnectionPool_lib) \
-				  User.o UserDao.o UserService.o
-UserGroupMapService_obj=UserGroupMapServiceTest.o UserGroupMap.o UserGroupMapDao.o \
-						UserGroupMapService.o $(ConnectionPool_lib) \
-						User.o UserDao.o UserService.o
-target=UserServiceTest GroupServiceTest FriendServiceTest UserGroupMapServiceTest
-CFLAGS=-Wall -std=c++11 -lpthread -L/usr/lib64/mysql/ -lmysqlclient
+
+ConnectionPool_lib=ConnectionPool.o \
+				   ConfigFileReader.o \
+				   Specification.o
+
+UserService_obj=UserServiceTest.o \
+				User.o \
+				UserDao.o \
+				UserService.o \
+				$(ConnectionPool_lib)
+
+GroupService_obj=GroupServiceTest.o \
+				 Group.o \
+				 GroupDao.o \
+				 GroupService.o \
+				 $(ConnectionPool_lib)\
+				 User.o \
+				 UserDao.o \
+				 UserService.o
+
+FriendService_obj=FriendServiceTest.o \
+				  Friend.o \
+				  FriendDao.o \
+				  FriendService.o \
+				  $(ConnectionPool_lib) \
+				  User.o \
+				  UserDao.o \
+				  UserService.o
+
+UserGroupMapService_obj=UserGroupMapServiceTest.o \
+						UserGroupMap.o \
+						UserGroupMapDao.o \
+						UserGroupMapService.o \
+						$(ConnectionPool_lib) \
+						User.o \
+						UserDao.o \
+						UserService.o
+
+RecordService_obj=RecordServiceTest.o \
+				  Record.o \
+				  RecordDao.o \
+				  RecordService.o \
+				  $(ConnectionPool_lib) \
+				  Group.o \
+				  GroupDao.o \
+				  User.o \
+				  UserDao.o
+
+target=UserServiceTest \
+	   GroupServiceTest \
+	   FriendServiceTest \
+	   UserGroupMapServiceTest \
+	   RecordServiceTest
+
+
+LIBS=-L/usr/lib64/mysql/ -lmysqlclient
+LIBS+=-lpthread
+
+CFLAGS=-Wall -std=c++11 $(LIBS)
+
 CC=g++
 
 all:$(target)
@@ -27,6 +76,9 @@ UserGroupMapServiceTest:$(UserGroupMapService_obj)
 	$(CC) $^ -o $@ $(CFLAGS)
 
 ConnectionPoolTest:$(ConnectionPool_obj)
+	$(CC) $^ -o $@ $(CFLAGS)
+
+RecordServiceTest:$(RecordService_obj)
 	$(CC) $^ -o $@ $(CFLAGS)
 
 UserServiceTest.o:UserServiceTest.cpp ../pojo/User.cpp ../pojo/User.h \
@@ -95,6 +147,23 @@ UserGroupMapDao.o:../dao/UserGroupMapDao.cpp ../dao/UserGroupMapDao.h \
 UserGroupMapService.o:../service/UserGroupMapService.cpp ../service/UserGroupMapService.h \
 	../pojo/UserGroupMap.cpp ../pojo/UserGroupMap.h \
 	../dao/UserGroupMapDao.cpp ../dao/UserGroupMapDao.h
+	$(CC) -c $< -o $@ $(CFLAGS)
+
+RecordServiceTest.o:RecordServiceTest.cpp ../pojo/Record.cpp ../pojo/Record.h \
+	../dao/RecordDao.cpp ../dao/RecordDao.h \
+	../service/RecordService.cpp ../service/RecordService.h
+	$(CC) -c $< -o $@ $(CFLAGS)
+
+Record.o:../pojo/Record.cpp ../pojo/Record.h
+	$(CC) -c $< -o $@ $(CFLAGS)
+
+RecordDao.o:../dao/RecordDao.cpp ../dao/RecordDao.h \
+	../pojo/Record.cpp ../pojo/Record.h
+	$(CC) -c $< -o $@ $(CFLAGS)
+
+RecordService.o:../service/RecordService.cpp ../service/RecordService.h \
+	../dao/RecordDao.cpp ../dao/RecordDao.h \
+	../pojo/Record.cpp ../pojo/Record.h
 	$(CC) -c $< -o $@ $(CFLAGS)
 
 ConnectionPool.o:../include/ConnectionPool.cpp ../include/ConnectionPool.h \

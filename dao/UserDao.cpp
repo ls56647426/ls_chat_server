@@ -87,7 +87,6 @@ User *UserDao::findOne(const Specification &spec)
 	user->setStatus(atoi(row[12]));
 	user->setDate(row[13]);
 
-
 	/* 加入缓存 */
 	//	userCache.insert("findOne" + spec->getSqlWhere(), user);
 
