@@ -32,6 +32,9 @@ public:
 	string getDate() const;
 	void setDate(const string &value);
 
+	bool getStatus() const;
+	void setStatus(bool value);
+
 	string toString() const;
 
 private:
@@ -41,6 +44,7 @@ private:
 	string src;
 	string content;
 	string date;
+	bool status;
 };
 
 #endif // MESSAGE_H

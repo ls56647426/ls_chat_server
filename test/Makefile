@@ -66,7 +66,7 @@ target=UserServiceTest \
 LIBS=-L/usr/lib64/mysql/ -lmysqlclient
 LIBS+=-lpthread
 
-CFLAGS=-Wall -std=c++11 $(LIBS)
+CFLAGS=-Wall -std=c++11 $(libs)
 
 CC=g++
 

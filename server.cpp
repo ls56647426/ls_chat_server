@@ -30,6 +30,7 @@
 #include <sys/mman.h>
 #include <pthread.h>
 #include <signal.h>
+#include <sys/param.h>
 
 /* c++ lib */
 #include <iostream>
@@ -58,11 +59,32 @@ FriendService fs;
  */
 int main ( int argc, char *argv[] )
 {
+	int pid;
+	/* 启动守护进程 */
+	if(argc == 2 && !strcmp(argv[1], "-d"))
+	{
+		pid = fork();
+		if(pid > 0)
+			exit(0);
+		
+		if(pid < 0)
+			exit(-1);
+
+		setsid();
+
+		chdir("/root/sources/git/ls_chat_server/release");
+
+		umask(0);
+
+		for(int i = 0; i < NOFILE; i++)
+			close(i);
+	}
+
 	/* 初始化服务器地址结构 */
 	struct sockaddr_in serv_addr;
 	memset(&serv_addr, 0, sizeof(serv_addr));
 	serv_addr.sin_family = AF_INET;
-//	inet_pton(AF_INET, SERV_IP, &serv_addr.sin_addr.s_addr);
+	//	inet_pton(AF_INET, SERV_IP, &serv_addr.sin_addr.s_addr);
 	serv_addr.sin_port = htons(SERV_PORT);
 
 	//创建event_base
@@ -206,7 +228,7 @@ void read_cb(struct bufferevent *bev, void *arg)
 					msg.getSrc().getUsername(),
 					msg.getSrc().getMobile()
 					);
-		
+
 			/* 查无此人 */
 			if(!u_tmp)
 			{
@@ -226,7 +248,7 @@ void read_cb(struct bufferevent *bev, void *arg)
 		case MsgType::COMMAND_FIND_USER: 		/* 查找用户 */
 			printf("接收到查找用户请求，开始查找。\n");
 			u_tmp = us.findUserByUsername(msg.getSrc().getUsername());
-			
+
 			/* 如果找到了，存入，没有找到，返回id是0的，也就是不需要操作 */
 			if(u_tmp)
 				msg.setSrc(*u_tmp);
@@ -243,8 +265,8 @@ void read_cb(struct bufferevent *bev, void *arg)
 			if(!fs.findFriend(msg.getSrc(), *u_tmp))
 			{
 				/* 添加好友 */
-				_friend.setUid1(msg.getSrc().getId());
-				_friend.setUid2(msg.getDest().getId());
+				_friend.setSuid(msg.getSrc().getId());
+				_friend.setDuid(msg.getDest().getId());
 				fs.addFriend(_friend);
 			}
 			msg.setType(MsgType::ERRNO_SUCCESS);
@@ -324,9 +346,9 @@ void listener_cb(struct evconnlistener* listener, evutil_socket_t fd,
 {
 	struct event_base *base = (struct event_base*)ptr;
 	char buf[256];
-//	int udp_socket;
-//	struct sockaddr_in udp_addr;
-//	struct event udp_event;
+	//	int udp_socket;
+	//	struct sockaddr_in udp_addr;
+	//	struct event udp_event;
 
 	struct sockaddr_in *clie_addr = (struct sockaddr_in *)addr;
 	evutil_inet_ntop(clie_addr->sin_family, &clie_addr->sin_addr, buf, sizeof(buf));
@@ -343,19 +365,19 @@ void listener_cb(struct evconnlistener* listener, evutil_socket_t fd,
 	bufferevent_enable(bev, EV_READ);
 
 	/* TODO:加入UDP通信 */
-/*	udp_socket = socket(AF_INET, SOCK_DGRAM, 0);
-	memset(&udp_addr, 0, sizeof(udp_addr));
-	udp_addr.sin_family = AF_INET;
-	udp_addr.sin_port = htons(UDP_SERV_PORT);
-	if(bind(udp_socket, (struct sockaddr *)&udp_addr, sizeof(udp_addr)))
-	{
+	/*	udp_socket = socket(AF_INET, SOCK_DGRAM, 0);
+		memset(&udp_addr, 0, sizeof(udp_addr));
+		udp_addr.sin_family = AF_INET;
+		udp_addr.sin_port = htons(UDP_SERV_PORT);
+		if(bind(udp_socket, (struct sockaddr *)&udp_addr, sizeof(udp_addr)))
+		{
 		perror("udp bind()");
 		exit(1);
-	}*/
+		}*/
 
 	/* Add the UDP event */
-/*	event_set(&udp_event, udp_socket, EV_READ | EV_PERSIST, udp_cb, NULL);
-	event_add(&udp_event, 0);*/
+	/*	event_set(&udp_event, udp_socket, EV_READ | EV_PERSIST, udp_cb, NULL);
+		event_add(&udp_event, 0);*/
 }
 
 /* 
@@ -383,49 +405,49 @@ void signal_cb(evutil_socket_t sig, short events, void *arg)
  * =====================================================================================
  */
 /*
-void udp_cb(const int sock, short int which, void *arg)
-{
-	struct sockaddr_in udp_serv_addr;
-	socklen_t udp_serv_len = sizeof(udp_serv_addr);
-	char buf[BUFSIZ];
-	int ret;
-	string msgStr;
-	Msg msg;
+   void udp_cb(const int sock, short int which, void *arg)
+   {
+   struct sockaddr_in udp_serv_addr;
+   socklen_t udp_serv_len = sizeof(udp_serv_addr);
+   char buf[BUFSIZ];
+   int ret;
+   string msgStr;
+   Msg msg;
 
-	memset(buf, 0, BUFSIZ);
-	ret = recvfrom(sock, &buf, sizeof(buf) - 1, 0, (struct sockaddr *)&udp_serv_addr, &udp_serv_len);
-	if(ret == -1)
-	{
-		perror("recvfrom()");
-		event_loopbreak();
-	}
-	else if(ret == 0)
-	{
-		printf("udp sock%d close\n", sock);
-		return;
-	}
+   memset(buf, 0, BUFSIZ);
+   ret = recvfrom(sock, &buf, sizeof(buf) - 1, 0, (struct sockaddr *)&udp_serv_addr, &udp_serv_len);
+   if(ret == -1)
+   {
+   perror("recvfrom()");
+   event_loopbreak();
+   }
+   else if(ret == 0)
+   {
+   printf("udp sock%d close\n", sock);
+   return;
+   }
 
-	printf("udp clinet: %s\n", buf);
-	msgStr = unpacket(buf, ret);
-	if(msgStr == "")
-	{
-		printf("解析数据包出错。\n");
-		return;
-	}
-	msg = jsonToMsg(msgStr);
-	switch(msg.getType())
-	{
+   printf("udp clinet: %s\n", buf);
+   msgStr = unpacket(buf, ret);
+   if(msgStr == "")
+   {
+   printf("解析数据包出错。\n");
+   return;
+   }
+   msg = jsonToMsg(msgStr);
+   switch(msg.getType())
+   {
 
-		default: break;
-	}*/
+   default: break;
+   }*/
 
-	/* Send the data back to the client */
+/* Send the data back to the client */
 /*	if(sendto(sock, buf, sizeof(buf), 0, (struct sockaddr *)&udp_serv_addr, udp_serv_len) == -1)
 	{
-		perror("sendto()");
-		event_loopbreak();
+	perror("sendto()");
+	event_loopbreak();
 	}
-}*/
+	}*/
 
 /* 
  * ===  FUNCTION  ======================================================================
@@ -632,33 +654,37 @@ Msg jsonToMsg(const string &jsonStr)
 	Group grp;
 	User src, dest;
 	MsgInfo info;
-	
+	list<User> list;
+
 	/* 提取json数据 */
 	Json::CharReaderBuilder b;
-    Json::CharReader* reader(b.newCharReader());
-    Json::Value root;
-    JSONCPP_STRING errs;
-    bool ok = reader->parse(jsonStr.data(), jsonStr.data() + jsonStr.size(), &root, &errs);
-    if (!ok || errs.size() != 0)
-    {
-        printf("invalid json: %s\n", jsonStr.data());
-        delete reader;
-        return msg;
-    }
-    delete reader;
+	Json::CharReader* reader(b.newCharReader());
+	Json::Value root;
+	JSONCPP_STRING errs;
+	bool ok = reader->parse(jsonStr.data(), jsonStr.data() + jsonStr.size(), &root, &errs);
+	if (!ok || errs.size() != 0)
+	{
+		printf("invalid json: %s\n", jsonStr.data());
+		delete reader;
+		return msg;
+	}
+	delete reader;
 
 	msg.setType(root["type"].asInt());
-	
+
 	grp.setId(root["group"]["id"].asInt());
+	grp.setName(root["group"]["num"].asString());
 	grp.setName(root["group"]["name"].asString());
+	grp.setDescription(root["group"]["description"].asString());
+	grp.setDate(root["group"]["date"].asString());
 	msg.setGroup(grp);
-	
+
 	src.setId(root["src"]["id"].asInt());
 	src.setUsername(root["src"]["username"].asString());
 	src.setPassword(root["src"]["password"].asString());
-	src.setHead_portrait(root["src"]["head_portrait"].asString());
+	src.setPic(root["src"]["pic"].asString());
 	src.setNickname(root["src"]["nickname"].asString());
-	src.setSignature(root["src"]["signature"].asString());
+	src.setSign(root["src"]["sign"].asString());
 	src.setSex(root["src"]["sex"].asString());
 	src.setBirthday(root["src"]["birthday"].asString());
 	src.setLocation(root["src"]["location"].asString());
@@ -666,14 +692,15 @@ Msg jsonToMsg(const string &jsonStr)
 	src.setMobile(root["src"]["mobile"].asString());
 	src.setEmail(root["src"]["email"].asString());
 	src.setStatus(root["src"]["status"].asInt());
+	src.setDate(root["src"]["date"].asString());
 	msg.setSrc(src);
 
 	dest.setId(root["dest"]["id"].asInt());
 	dest.setUsername(root["dest"]["username"].asString());
 	dest.setPassword(root["dest"]["password"].asString());
-	dest.setHead_portrait(root["dest"]["head_portrait"].asString());
+	dest.setPic(root["dest"]["pic"].asString());
 	dest.setNickname(root["dest"]["nickname"].asString());
-	dest.setSignature(root["dest"]["signature"].asString());
+	dest.setSign(root["dest"]["sign"].asString());
 	dest.setSex(root["dest"]["sex"].asString());
 	dest.setBirthday(root["dest"]["birthday"].asString());
 	dest.setLocation(root["dest"]["location"].asString());
@@ -681,10 +708,33 @@ Msg jsonToMsg(const string &jsonStr)
 	dest.setMobile(root["dest"]["mobile"].asString());
 	dest.setEmail(root["dest"]["email"].asString());
 	dest.setStatus(root["dest"]["status"].asInt());
+	dest.setDate(root["dest"]["date"].asString());
 	msg.setDest(dest);
 
 	info.setInfo(root["info"]["info"].asString());
-//	info.setJsonInfo(root["info"]["jsonInfo"].asString());
+	Json::Value userListInfoRoot = root["info"]["userListInfo"];
+	int userListInfoSize = userListInfoRoot.size();
+	for(int i = 0; i < userListInfoSize; i++)
+	{
+		Json::Value userRoot = userListInfoRoot[i]["root"];
+		User user;
+		user.setId(userRoot["id"].asInt());
+		user.setUsername(userRoot["username"].asString());
+		user.setPassword(userRoot["password"].asString());
+		user.setPic(userRoot["pic"].asString());
+		user.setNickname(userRoot["nickname"].asString());
+		user.setSign(userRoot["sign"].asString());
+		user.setSex(userRoot["sex"].asString());
+		user.setBirthday(userRoot["birthday"].asString());
+		user.setLocation(userRoot["location"].asString());
+		user.setProfession(userRoot["profession"].asString());
+		user.setMobile(userRoot["mobile"].asString());
+		user.setEmail(userRoot["email"].asString());
+		user.setStatus(userRoot["status"].asInt());
+		user.setDate(userRoot["date"].asString());
+		list.push_back(user);
+	}
+	info.setUserListInfo(list);
 	msg.setInfo(info);
 
 	return msg;

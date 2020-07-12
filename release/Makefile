@@ -6,13 +6,44 @@ LIBS+=-L/usr/local/lib/ -lz
 LIBS+=-L/usr/lib64/ -lpthread
 CFLAGS=-Wall -std=c++11
 
-ConnectionPool_obj=ConnectionPool.o ConfigFileReader.o Specification.o
-UserService_obj=UserService.o UserDao.o User.o
-GroupService_obj=GroupService.o GroupDao.o Group.o
-FriendService_obj=FriendService.o FriendDao.o Friend.o
-UserGroupMapService_obj=UserGroupMapService.o UserGroupMapDao.o UserGroupMap.o
-object=server.o $(ConnectionPool_obj) $(UserService_obj) $(GroupService_obj) \
-	   $(FriendService_obj) $(UserGroupMapService_obj) Msg.o
+ConnectionPool_obj=ConnectionPool.o \
+				   ConfigFileReader.o \
+				   Specification.o
+
+UserService_obj=UserService.o \
+				UserDao.o \
+				User.o
+
+GroupService_obj=GroupService.o \
+				 GroupDao.o \
+				 Group.o
+
+FriendService_obj=FriendService.o \
+				  FriendDao.o \
+				  Friend.o
+
+UserGroupMapService_obj=UserGroupMapService.o \
+						UserGroupMapDao.o \
+						UserGroupMap.o
+
+RecordService_obj=RecordService.o \
+				  RecordDao.o \
+				  Record.o
+
+MessageService_obj=MessageService.o \
+				   MessageDao.o \
+				   Message.o
+
+object=server.o \
+	   $(ConnectionPool_obj) \
+	   $(UserService_obj) \
+	   $(GroupService_obj) \
+	   $(FriendService_obj) \
+	   $(UserGroupMapService_obj) \
+	   $(RecordService_obj) \
+	   $(MessageService_obj) \
+	   Msg.o
+
 target=server
 
 $(target):$(object)
@@ -67,6 +98,30 @@ UserGroupMapDao.o:../dao/UserGroupMapDao.cpp ../dao/UserGroupMapDao.h \
 UserGroupMapService.o:../service/UserGroupMapService.cpp ../service/UserGroupMapService.h \
 	../pojo/UserGroupMap.cpp ../pojo/UserGroupMap.h \
 	../dao/UserGroupMapDao.cpp ../dao/UserGroupMapDao.h
+	$(CC) -c $< -o $@ $(CFLAGS)
+
+Record.o:../pojo/Record.cpp ../pojo/Record.h
+	$(CC) -c $< -o $@ $(CFLAGS)
+
+RecordDao.o:../dao/RecordDao.cpp ../dao/RecordDao.h \
+	../pojo/Record.cpp ../pojo/Record.h
+	$(CC) -c $< -o $@ $(CFLAGS)
+
+RecordService.o:../service/RecordService.cpp ../service/RecordService.h \
+	../dao/RecordDao.cpp ../dao/RecordDao.h \
+	../pojo/Record.cpp ../pojo/Record.h
+	$(CC) -c $< -o $@ $(CFLAGS)
+
+Message.o:../pojo/Message.cpp ../pojo/Message.h
+	$(CC) -c $< -o $@ $(CFLAGS)
+
+MessageDao.o:../dao/MessageDao.cpp ../dao/MessageDao.h \
+	../pojo/Message.cpp ../pojo/Message.h
+	$(CC) -c $< -o $@ $(CFLAGS)
+
+MessageService.o:../service/MessageService.cpp ../service/MessageService.h \
+	../pojo/Message.cpp ../pojo/Message.h \
+	../dao/MessageDao.cpp ../dao/MessageDao.h
 	$(CC) -c $< -o $@ $(CFLAGS)
 
 ConnectionPool.o:../include/ConnectionPool.cpp ../include/ConnectionPool.h \

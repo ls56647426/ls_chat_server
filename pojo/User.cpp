@@ -5,9 +5,9 @@ User::User()
 	id = 0;
 	username.clear();
 	password.clear();
-	head_portrait.clear();
+	pic.clear();
 	nickname.clear();
-	signature.clear();
+	sign.clear();
 	sex.clear();
 	birthday.clear();
 	location.clear();
@@ -68,14 +68,14 @@ void User::setStatus(const uint32_t &value)
 	status = value;
 }
 
-string User::getHead_portrait() const
+string User::getPic() const
 {
-	return head_portrait;
+	return pic;
 }
 
-void User::setHead_portrait(const string &value)
+void User::setPic(const string &value)
 {
-	head_portrait = value;
+	pic = value;
 }
 
 string User::getNickname() const
@@ -88,14 +88,14 @@ void User::setNickname(const string &value)
 	nickname = value;
 }
 
-string User::getSignature() const
+string User::getSign() const
 {
-	return signature;
+	return sign;
 }
 
-void User::setSignature(const string &value)
+void User::setSign(const string &value)
 {
-	signature = value;
+	sign = value;
 }
 
 string User::getSex() const
@@ -163,9 +163,9 @@ string User::toString() const
     return "{\"id\":" + to_string(id) +
             ", \"username\":\"" + username +
 			"\", \"password\":\"" + password +
-			"\", \"head_portrait\":\"" + head_portrait +
+			"\", \"pic\":\"" + pic +
 			"\", \"nickname\":\"" + nickname +
-			"\", \"signature\":\"" + signature +
+			"\", \"sign\":\"" + sign +
 			"\", \"sex\":\"" + sex +
 			"\", \"birthday\":\"" + birthday +
 			"\", \"location\":\"" + location +
@@ -173,5 +173,5 @@ string User::toString() const
 			"\", \"mobile\":\"" + mobile +
 			"\", \"email\":\"" + email +
 			"\", \"status\":" + to_string(status) +
-			"\", \"date\":\"" + date + "\"}";
+			", \"date\":\"" + date + "\"}";
 }

@@ -41,14 +41,14 @@ public:
 	uint32_t getStatus() const;
 	void setStatus(const uint32_t &value);
 
-	string getHead_portrait() const;
-	void setHead_portrait(const string &value);
+	string getPic() const;
+	void setPic(const string &value);
 
 	string getNickname() const;
 	void setNickname(const string &value);
 
-	string getSignature() const;
-	void setSignature(const string &value);
+	string getSign() const;
+	void setSign(const string &value);
 
 	string getSex() const;
 	void setSex(const string &value);
@@ -75,9 +75,9 @@ private:
 	uint32_t id;
 	string username;
 	string password;
-	string head_portrait;
+	string pic;
 	string nickname;
-	string signature;
+	string sign;
 	string sex;
 	string birthday;
 	string location;

@@ -5,6 +5,7 @@ Record::Record()
 	id = gid = suid = duid = 0;
 	content.clear();
 	date.clear();
+	status = 0;
 }
 
 uint32_t Record::getId() const
@@ -67,6 +68,16 @@ void Record::setDate(const string &value)
 	date = value;
 }
 
+bool Record::getStatus() const
+{
+    return status;
+}
+
+void Record::setStatus(bool value)
+{
+    status = value;
+}
+
 string Record::toString() const
 {
 	return "{\"id\":" + to_string(id) +
@@ -74,5 +85,6 @@ string Record::toString() const
 			", \"suid\":" + to_string(suid) +
 			", \"duid\":" + to_string(duid) +
 			", \"content\":\"" + content +
-			"\", \"date\":\"" + date + "\"}";
+			"\", \"date\":\"" + date +
+			"\", \"status\":" + to_string(status) + "\"}";
 }

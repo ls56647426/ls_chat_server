@@ -47,6 +47,7 @@ Record* RecordDao::findOne(const uint32_t &id)
 	record->setDuid(atoi(row[3]));
 	record->setContent(row[4]);
 	record->setDate(row[5]);
+	record->setStatus(atoi(row[6]));
 
 	return record;
 }
@@ -71,6 +72,7 @@ Record* RecordDao::findOne(const Specification &spec)
 	record->setDuid(atoi(row[3]));
 	record->setContent(row[4]);
 	record->setDate(row[5]);
+	record->setStatus(atoi(row[6]));
 
 	return record;
 }
@@ -101,6 +103,7 @@ list<Record> RecordDao::findAll(const Specification &spec)
 		record.setDuid(atoi(row[3]));
 		record.setContent(row[4]);
 		record.setDate(row[5]);
+		record.setStatus(atoi(row[6]));
 		res.push_back(record);
 	}
 
@@ -122,7 +125,8 @@ void RecordDao::save(const Record *record)
 			to_string(record->getSuid()) + ", " +
 			to_string(record->getDuid()) + ", " +
 			Specification::tranString(record->getContent()) + ", " +
-			Specification::tranString(record->getDate()) + ")";
+			Specification::tranString(record->getDate()) + ", " +
+			to_string(record->getStatus()) + ")";
 		ConnectionPool::runNo(content);
 	}
 	else
@@ -131,8 +135,9 @@ void RecordDao::save(const Record *record)
 			to_string(record->getGid()) + ", suid = " +
 			to_string(record->getSuid()) + ", duid = " +
 			to_string(record->getDuid()) + ", content = " +
-			Specification::tranString(record->getContent()) + ", date" +
-			Specification::tranString(record->getDate()) +
+			Specification::tranString(record->getContent()) + ", date = " +
+			Specification::tranString(record->getDate()) + + ", status = " +
+			to_string(record->getStatus()) +
 			" where id = " + to_string(record->getId());
 		ConnectionPool::runNo(content);
 	}

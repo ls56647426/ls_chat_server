@@ -35,9 +35,9 @@ User *UserDao::findOne(const uint32_t &id)
 	user->setId(atoi(row[0]));
 	user->setUsername(row[1]);
 	user->setPassword(row[2]);
-	user->setHead_portrait(row[3]);
+	user->setPic(row[3]);
 	user->setNickname(row[4]);
-	user->setSignature(row[5]);
+	user->setSign(row[5]);
 	user->setSex(row[6]);
 	user->setBirthday(row[7]);
 	user->setLocation(row[8]);
@@ -75,9 +75,9 @@ User *UserDao::findOne(const Specification &spec)
 	user->setId(atoi(row[0]));
 	user->setUsername(row[1]);
 	user->setPassword(row[2]);
-	user->setHead_portrait(row[3]);
+	user->setPic(row[3]);
 	user->setNickname(row[4]);
-	user->setSignature(row[5]);
+	user->setSign(row[5]);
 	user->setSex(row[6]);
 	user->setBirthday(row[7]);
 	user->setLocation(row[8]);
@@ -119,9 +119,9 @@ list<User> UserDao::findAll(const Specification &spec)
 		user.setId(atoi(row[0]));
 		user.setUsername(row[1]);
 		user.setPassword(row[2]);
-		user.setHead_portrait(row[3]);
+		user.setPic(row[3]);
 		user.setNickname(row[4]);
-		user.setSignature(row[5]);
+		user.setSign(row[5]);
 		user.setSex(row[6]);
 		user.setBirthday(row[7]);
 		user.setLocation(row[8]);
@@ -152,9 +152,9 @@ void UserDao::save(const User *user)
 		content = "insert into `user` values(null, " +
 			Specification::tranString(user->getUsername()) +
 			", " + Specification::tranString(user->getPassword()) +
-			", " + Specification::tranString(user->getHead_portrait()) +
+			", " + Specification::tranString(user->getPic()) +
 			", " + Specification::tranString(user->getNickname()) +
-			", " + Specification::tranString(user->getSignature()) +
+			", " + Specification::tranString(user->getSign()) +
 			", " + Specification::tranString(user->getSex()) +
 			", " + Specification::tranString(user->getBirthday()) +
 			", " + Specification::tranString(user->getLocation()) +
@@ -170,9 +170,9 @@ void UserDao::save(const User *user)
 		content = "update `user` set username = " +
 			Specification::tranString(user->getUsername()) +
 			", password = " + Specification::tranString(user->getPassword()) +
-			", head_portrait = " + Specification::tranString(user->getHead_portrait()) +
+			", pic = " + Specification::tranString(user->getPic()) +
 			", nickname = " + Specification::tranString(user->getNickname()) +
-			", signature = " + Specification::tranString(user->getSignature()) +
+			", sign = " + Specification::tranString(user->getSign()) +
 			", sex = " + Specification::tranString(user->getSex()) +
 			", birthday = " + Specification::tranString(user->getBirthday()) +
 			", location = " + Specification::tranString(user->getLocation()) +

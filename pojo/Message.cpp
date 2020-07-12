@@ -6,6 +6,7 @@ Message::Message()
 	src.clear();
 	content.clear();
 	date.clear();
+	status = 0;
 }
 
 uint32_t Message::getId() const
@@ -68,6 +69,16 @@ void Message::setDate(const string &value)
 	date = value;
 }
 
+bool Message::getStatus() const
+{
+    return status;
+}
+
+void Message::setStatus(bool value)
+{
+    status = value;
+}
+
 string Message::toString() const
 {
 	return "{\"id\":" + to_string(id) +
@@ -75,5 +86,6 @@ string Message::toString() const
 			", \"uid\":" + to_string(uid) +
 			", \"src\":\"" + src +
 			"\", \"content\":\"" + content +
-			"\", \"date\":\"" + date + "\"}";
+			"\", \"date\":\"" + date +
+			"\", \"status\":" + to_string(status) + "\"}";
 }

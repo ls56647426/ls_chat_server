@@ -47,6 +47,7 @@ Message* MessageDao::findOne(const uint32_t &id)
 	message->setSrc(row[3]);
 	message->setContent(row[4]);
 	message->setDate(row[5]);
+	message->setStatus(atoi(row[6]));
 
 	return message;
 }
@@ -71,6 +72,7 @@ Message* MessageDao::findOne(const Specification &spec)
 	message->setSrc(row[3]);
 	message->setContent(row[4]);
 	message->setDate(row[5]);
+	message->setStatus(atoi(row[6]));
 
 	return message;
 
@@ -102,6 +104,7 @@ list<Message> MessageDao::findAll(const Specification &spec)
 		message.setSrc(row[3]);
 		message.setContent(row[4]);
 		message.setDate(row[5]);
+		message.setStatus(atoi(row[6]));
 		res.push_back(message);
 	}
 
@@ -123,7 +126,8 @@ void MessageDao::save(const Message *message)
 			to_string(message->getUid()) + ", " +
 			Specification::tranString(message->getSrc()) + ", " +
 			Specification::tranString(message->getContent()) + ", " +
-			Specification::tranString(message->getDate()) + ")";
+			Specification::tranString(message->getDate()) + ", " +
+			to_string(message->getStatus()) + ")";
 		ConnectionPool::runNo(content);
 	}
 	else
@@ -132,8 +136,9 @@ void MessageDao::save(const Message *message)
 			to_string(message->getType()) + ", uid = " +
 			to_string(message->getUid()) + ", src = " +
 			Specification::tranString(message->getSrc()) + ", content = " +
-			Specification::tranString(message->getContent()) + ", date" +
-			Specification::tranString(message->getDate()) +
+			Specification::tranString(message->getContent()) + ", date = " +
+			Specification::tranString(message->getDate()) + ", status = " +
+			to_string(message->getStatus()) +
 			" where id = " + to_string(message->getId());
 		ConnectionPool::runNo(content);
 	}
